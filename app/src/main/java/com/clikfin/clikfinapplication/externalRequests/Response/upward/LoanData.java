@@ -13,7 +13,7 @@ public class LoanData implements Parcelable {
 	@SerializedName("customer_id")
 	private int customerId;
 
-	@SerializedName("loan id")
+	@SerializedName("loan_id")
 	private int loanId;
 
 	public int getAffiliateLoanIdentifier(){
@@ -66,4 +66,16 @@ public class LoanData implements Parcelable {
 			return new LoanData[size];
 		}
 	};
+
+	public void setAffiliateLoanIdentifier(int affiliateLoanIdentifier) {
+		this.affiliateLoanIdentifier = affiliateLoanIdentifier;
+	}
+
+	public void setCustomerId(int customerId) {
+		this.customerId = customerId;
+	}
+
+	public void setLoanId(int loanId) {
+		this.loanId = loanId;
+	}
 }

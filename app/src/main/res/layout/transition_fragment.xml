@@ -5,16 +5,19 @@
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/checkBttn"
-        android:layout_width="match_parent"
+        android:layout_width="300dp"
         android:layout_height="wrap_content"
-        android:layout_gravity="end|bottom"
-        android:textColor="@color/colorPrimary"
+        android:layout_gravity="center_horizontal|bottom"
+        android:textColor="@color/black"
+        android:textStyle="bold"
+        android:textAllCaps="false"
+        android:background="@drawable/background_oval"
+        android:layout_marginBottom="20dp"
         android:text="Check Application Status" />
 
     <WebView
         android:id="@+id/transitionView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
-
 
 </FrameLayout>

@@ -19,6 +19,11 @@ public class APIClient {
     public static final String BASE_URL = "http://app.clikfin.com";
     public static final String BASE_UPWARD_URL = "https://uat1.upwards.in/af/v1/customer/"; //testing
     public static final String BASE_UPWARD_WEB_URL = "https://uat1.web.upwards.in/"; //testing
+    public static final String BASE_LOANTAP_URL = " https://api.loantap.in/"; //testing
+    public static final String LOANTAP_APIKEY = "H3kYj9iKiAxOHI2Eu4hYJDlqcyFL09iC";
+    public static final String LOANTAPPRODUCTID = "lt-personal-term-loan-reducing";
+    public static final String LOANTAPPARTNERID="clikfin";
+
 
     public static final String BASE_UPWARD_PROD_URL = "https://leads.backend.upwards.in/af/v1/customer/"; //production
     public static final String BASE_UPWARD_PROD_WEB_URL = "https://leads.backend.upwards.in/"; //production

@@ -1,8 +1,14 @@
 package com.clikfin.clikfinapplication.fragment;
 
+import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.DocumentsContract;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -13,6 +19,7 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
@@ -29,8 +36,10 @@ import com.clikfin.clikfinapplication.model.OnBoardItem;
 import com.clikfin.clikfinapplication.network.APICallbackInterface;
 import com.clikfin.clikfinapplication.network.APIClient;
 import com.clikfin.clikfinapplication.util.Common;
+import com.clikfin.clikfinapplication.util.FileUtils;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -41,6 +50,7 @@ import retrofit2.Response;
 
 @SuppressWarnings("ALL")
 public class DashboardFragment extends Fragment {
+    private static final int PICK_PDF_FILE = 111;
     Button btnApplyLoan, btnCibilCheck, btnReferAndEarn;
     private FragmentManager fragmentManager;
     private FragmentTransaction fragmentTransaction;
@@ -49,13 +59,16 @@ public class DashboardFragment extends Fragment {
     private ImageView[] dots;
     ViewPager viewPager;
     static Timer timer;
+    private String filePath = "";
+
     static TimerTask timerTask;
     FragmentActivity activity;
     Context context;
     BottomNavigationView bottomNavigationView;
-    PagerAdapter  mAdapter;
+    PagerAdapter mAdapter;
     final ArrayList<OnBoardItem> onBoardItems = new ArrayList<>();
     LinearLayout SliderDots;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -79,7 +92,7 @@ public class DashboardFragment extends Fragment {
         btnApplyLoan = view.findViewById(R.id.btn_apply_now);
         btnCibilCheck = view.findViewById(R.id.btn_check_now);
         btnReferAndEarn = view.findViewById(R.id.btn_refer_and_earn);
-        viewPager =  view.findViewById(R.id.scrollingViewpager);
+        viewPager = view.findViewById(R.id.scrollingViewpager);
         bottomNavigationView = view.findViewById(R.id.bottom_navigation);
 
 
@@ -88,12 +101,12 @@ public class DashboardFragment extends Fragment {
         mAdapter = new dashboard_viewPager(context, onBoardItems);
         viewPager.setAdapter(mAdapter);
 
-       // setUiPageViewController();
-
+        // setUiPageViewController();
 
 
         SharedPreferences sharedPreferences = context.getSharedPreferences(getString(R.string.shared_preferences), Context.MODE_PRIVATE);
         String loanApplicationId = sharedPreferences.getString(getString(R.string.loan_application_id), "");
+        sharedPreferences.edit().putString(getString(R.string.loan_source), getString(R.string.upward)).apply();
 
 
         btnApplyLoan.setOnClickListener(new View.OnClickListener() {
@@ -101,14 +114,18 @@ public class DashboardFragment extends Fragment {
             public void onClick(View v) {
 
                 if (Common.isNetworkConnected(context)) {
-                    if (!loanApplicationId.equalsIgnoreCase("")) {
-                        getLoanApplicationStatus();
-                    } else {
+                    if (sharedPreferences.getString(getString(R.string.loan_source), "").equals(getString(R.string.upward))) {
+//                        fragmentNavigation();
+//                    } else {
+                        if (!loanApplicationId.equalsIgnoreCase("")) {
+                            getLoanApplicationStatus();
+                        }
                         fragmentNavigation();
                     }
                 } else {
                     Common.networkDisconnectionDialog(context);
                 }
+//                openPDF();
             }
 
 
@@ -142,7 +159,7 @@ public class DashboardFragment extends Fragment {
         } else if (loanApplicationStatus.equalsIgnoreCase(getString(R.string.bank_details_pending))) {
             replaceFragment(new BankDetailsFragment());
         } else if (loanApplicationStatus.equalsIgnoreCase(getString(R.string.documents_pending))) {
-            replaceFragment(new DocumentUploadFragment());
+            replaceFragment(new BankDetailsFragment());
         } else if (loanApplicationStatus.equalsIgnoreCase(getString(R.string.under_review))) {
             replaceFragment(new LoanApplicationStatusFragment());
         } else if (loanApplicationStatus.equalsIgnoreCase(getString(R.string.disbursement_pending))) {
@@ -153,9 +170,7 @@ public class DashboardFragment extends Fragment {
             replaceFragment(new LoanApplicationStatusFragment());
         } else if (loanApplicationStatus.equalsIgnoreCase(getString(R.string.approved))) {
             replaceFragment(new LoanApplicationStatusFragment());
-        } /*else if (loanApplicationStatus.equalsIgnoreCase(getString(R.string.upward))){
-            replaceFragment(new UpwardTransitionFragment());
-        }*/
+        }
     }
 
     @Override
@@ -164,16 +179,16 @@ public class DashboardFragment extends Fragment {
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
-                viewPager.post(new Runnable(){
+                viewPager.post(new Runnable() {
 
                     @Override
                     public void run() {
-                        viewPager.setCurrentItem((viewPager.getCurrentItem()+1)%onBoardItems.size());
+                        viewPager.setCurrentItem((viewPager.getCurrentItem() + 1) % onBoardItems.size());
                     }
                 });
             }
         };
-        timer  = new Timer();
+        timer = new Timer();
         timer.schedule(timerTask, 4000, 4000);
     }
 
@@ -205,6 +220,7 @@ public class DashboardFragment extends Fragment {
         dots[0].setImageDrawable(ContextCompat.getDrawable(context, R.drawable.active_dot));
 
     }
+
     public void loadData() {
 
         int[] header = {R.string.scrolling_header_1, R.string.scrolling_header_2};
@@ -221,6 +237,7 @@ public class DashboardFragment extends Fragment {
             onBoardItems.add(item);
         }
     }
+
     private void getLoanApplicationStatus() {
         SharedPreferences sharedPreferences = context.getSharedPreferences(getString(R.string.shared_preferences), Context.MODE_PRIVATE);
         String authToken = sharedPreferences.getString(getString(R.string.user_auth_token), "");
@@ -275,12 +292,49 @@ public class DashboardFragment extends Fragment {
         fragmentTransaction.addToBackStack(null);
         fragmentTransaction.commitAllowingStateLoss();
     }
+
     public void replaceFragmentMainFrame(Fragment fragment) {
-        fragmentManager =activity.getSupportFragmentManager();
+        fragmentManager = activity.getSupportFragmentManager();
         fragmentTransaction = fragmentManager.beginTransaction();
-       // fragmentManager.popBackStack();
+        // fragmentManager.popBackStack();
         fragmentTransaction.replace(R.id.main_frame, fragment);
         fragmentTransaction.commitAllowingStateLoss();
     }
 
+    void openPDF() {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+//        intent.setType("application/pdf");
+        intent.setType("*/*");
+        intent.setAction(Intent.ACTION_OPEN_DOCUMENT);
+        try {
+            startActivityForResult(intent, PICK_PDF_FILE);
+            return;
+        } catch (ActivityNotFoundException anfe) {
+            Log.w("TeST", "couldn't complete ACTION_OPEN_DOCUMENT, no activity found. falling back.");
+        }
+        // Optionally, specify a URI for the file that should appear in the
+        // system file picker when it loads.
+//        intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri);
+
+//        startActivityForResult(intent, PICK_PDF_FILE);
+    }
+
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent resultData) {
+        super.onActivityResult(requestCode, resultCode, resultData);
+        /*if (requestCode == PICK_PDF_FILE
+                && resultCode == Activity.RESULT_OK) {
+            // The result data contains a URI for the document or directory that
+            // the user selected.
+            Uri uri = null;
+            if (resultData != null) {
+                uri = resultData.getData();
+                filePath = FileUtils.getRealPath(context, fileUri);
+                file = new File(filePath);
+                // Perform operations on the document using its URI.
+            }
+        }*/
+    }
 }

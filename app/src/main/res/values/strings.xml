@@ -380,6 +380,9 @@ disbursal of loan. This helps in providing a smoother and seamless experience wh
     <string name="employment_details">Employement Details</string>
     <string name="upwardResponse">Upward Response</string>
     <string name="upward">UPWARD</string>
+    <string name="loan_source">loan source</string>
+    <string name="pre_rejection">Pre-Rejection</string>
+    <string name="loantap">LOANTAP</string>
     <bool name="is_login_with_mobile_number">false</bool>
 
 

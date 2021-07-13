@@ -2,6 +2,9 @@ package com.clikfin.clikfinapplication.network;
 
 import com.clikfin.clikfinapplication.externalRequests.Request.ApplicationStatusRequest;
 import com.clikfin.clikfinapplication.externalRequests.Request.BankDetails;
+import com.clikfin.clikfinapplication.externalRequests.Request.DocumentReportRequest;
+import com.clikfin.clikfinapplication.externalRequests.Request.DocumentStatusRequest;
+import com.clikfin.clikfinapplication.externalRequests.Request.DocumentUrlGenerateRequest;
 import com.clikfin.clikfinapplication.externalRequests.Request.EmployeeDetails;
 import com.clikfin.clikfinapplication.externalRequests.Request.FCMTokenRequest;
 import com.clikfin.clikfinapplication.externalRequests.Request.Login;
@@ -11,17 +14,21 @@ import com.clikfin.clikfinapplication.externalRequests.Request.PersonalDetails;
 import com.clikfin.clikfinapplication.externalRequests.Request.ReferAndEarn;
 import com.clikfin.clikfinapplication.externalRequests.Request.ReferenceDetails;
 import com.clikfin.clikfinapplication.externalRequests.Request.RegisterUser;
-import com.clikfin.clikfinapplication.externalRequests.Request.UpwardLoanRequest;
 import com.clikfin.clikfinapplication.externalRequests.Request.UpwardLoanRequestModel;
 import com.clikfin.clikfinapplication.externalRequests.Response.ApplyLoanResponse;
 import com.clikfin.clikfinapplication.externalRequests.Response.AuthenticatedUser;
 import com.clikfin.clikfinapplication.externalRequests.Response.BankDetailsResponse;
-import com.clikfin.clikfinapplication.externalRequests.Response.LoanStatusResponse;
 import com.clikfin.clikfinapplication.externalRequests.Response.UploadDocName;
 import com.clikfin.clikfinapplication.externalRequests.Response.UploadDocumentResponse;
 import com.clikfin.clikfinapplication.externalRequests.Response.upward.UpwardLoanResponse;
+import com.clikfin.clikfinapplication.externalRequests.Response.upward.docUpload.DocumentURLGenerationResponse;
+import com.clikfin.clikfinapplication.externalRequests.Response.upward.documentRespone.DocumentReportResponse;
+import com.clikfin.clikfinapplication.externalRequests.Response.upward.loanStatus.LoanStatusResponse;
+import com.clikfin.clikfinapplication.externalRequests.Response.upward.updateStatus.StatusDocumentResponse;
+import com.clikfin.clikfinapplication.loantap.AddApplication1;
 
 import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
@@ -127,11 +134,50 @@ public interface ApiInterface {
                                                             @Header("Affiliated-User-Id") String AffiliateUserId,
                                                             @Header("Affiliated-User-Session-Token") String AffiliateSessionToken,
                                                             @Body UpwardLoanRequestModel upwardRequest);
+
     @Headers("Content-type: application/json")
     @POST
     Call<LoanStatusResponse> getAppStatus(@Url String url,
                                           @Header("Affiliated-User-Id") String AffiliateUserId,
                                           @Header("Affiliated-User-Session-Token") String AffiliateSessionToken,
                                           @Body ApplicationStatusRequest request);
+
+
+    @Headers("Content-type: application/json")
+    @POST
+    Call<DocumentURLGenerationResponse> UploadDocumentURLGeneration(@Url String url,
+                                                                    @Header("Affiliated-User-Id") String AffiliateUserId,
+                                                                    @Header("Affiliated-User-Session-Token") String AffiliateSessionToken,
+                                                                    @Body DocumentUrlGenerateRequest request);
+
+    @Headers("Content-Type: image/jpeg")
+    @PUT
+    Call<Void> UploadDocumentUpward(@Url String url,
+                                      @Body RequestBody file);
+
+    @Headers("Content-Type: application/json")
+    @POST
+    Call<StatusDocumentResponse> UploadDocumentStatusUpward(@Url String url,
+                                                            @Header("Affiliated-User-Id") String AffiliateUserId,
+                                                            @Header("Affiliated-User-Session-Token") String AffiliateSessionToken,
+                                                            @Body DocumentStatusRequest docRequest);
+
+    @Headers("Content-Type: application/json")
+    @POST
+    Call<DocumentReportResponse> getDocumentReport(@Url String url,
+                                                   @Header("Affiliated-User-Id") String AffiliateUserId,
+                                                   @Header("Affiliated-User-Session-Token") String AffiliateSessionToken,
+                                                   @Body DocumentReportRequest docRequest);
+
+
+    //LoanTap
+    @Headers("Content-type: application/json")
+    @POST
+    Call<String> generateLoanTapApplication(@Url String url,
+                                                            @Header("X-API-AUTH") String APIkey,
+                                                            @Header("REQ-PRODUCT-ID") String productId,
+                                                            @Header("PARTNER-ID") String partnerId,
+                                                            @Body AddApplication1 loanTapRequest);
+
 
 }

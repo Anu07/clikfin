@@ -75,7 +75,7 @@
         </LinearLayout>
 
 
-        <LinearLayout
+        <LinearLayout android:id="@+id/adhaarLay"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/input_field_margin"
@@ -324,7 +324,6 @@
                     android:text="upload last 3 months bank statements"
                     android:textColor="@color/input_color"
                     android:textSize="@dimen/text_size" />
-
             </LinearLayout>
 
             <RelativeLayout
@@ -387,6 +386,7 @@
                     android:layout_marginLeft="@dimen/input_field_margin"
                     android:layout_toRightOf="@+id/layBankState2"
                     android:gravity="center"
+                    android:id="@+id/layBankState3"
                     android:orientation="vertical">
 
                     <ImageView
@@ -502,7 +502,7 @@
                 </LinearLayout>
 
                 <LinearLayout
-
+                    android:id="@+id/layImgPay3"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_marginLeft="@dimen/input_field_margin"

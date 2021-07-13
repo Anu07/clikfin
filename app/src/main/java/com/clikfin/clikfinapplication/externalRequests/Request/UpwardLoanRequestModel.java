@@ -59,7 +59,7 @@ public class UpwardLoanRequestModel{
 	@SerializedName("current_address_line1")
 	private String currentAddressLine1;
 
-	@SerializedName("total work experience category id")
+	@SerializedName("total_work_experience_category_id")
 	private int totalWorkExperienceCategoryId;
 
 	@SerializedName("mobile_number1")

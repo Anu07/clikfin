@@ -1,5 +1,7 @@
+
 package com.clikfin.clikfinapplication.fragment;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
@@ -12,6 +14,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -30,12 +33,21 @@ import com.clikfin.clikfinapplication.externalRequests.Response.ApplyLoanRespons
 import com.clikfin.clikfinapplication.externalRequests.Response.BankDetailsResponse;
 import com.clikfin.clikfinapplication.externalRequests.Response.UploadDocumentResponse;
 import com.clikfin.clikfinapplication.externalRequests.Response.upward.UpwardLoanResponse;
+import com.clikfin.clikfinapplication.loantap.AddApplication1;
 import com.clikfin.clikfinapplication.network.APICallbackInterface;
 import com.clikfin.clikfinapplication.network.APIClient;
 import com.clikfin.clikfinapplication.util.Common;
 import com.google.gson.Gson;
 
 import java.lang.annotation.Annotation;
+import java.security.SecureRandom;
+import java.time.Instant;
+
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -45,6 +57,8 @@ import retrofit2.Response;
 
 import static com.clikfin.clikfinapplication.fragment.EmploymentFragment.upwardsAuthToken;
 import static com.clikfin.clikfinapplication.fragment.EmploymentFragment.upwardsUserID;
+import static com.clikfin.clikfinapplication.network.APIClient.LOANTAPPARTNERID;
+import static com.clikfin.clikfinapplication.network.APIClient.LOANTAPPRODUCTID;
 
 @SuppressWarnings("All")
 public class BankDetailsFragment extends Fragment {
@@ -54,9 +68,15 @@ public class BankDetailsFragment extends Fragment {
     String[] bankName = null;
     static FragmentActivity activity;
     Context context;
+    ProgressBar progress;
     SharedPreferences sharedPreferences;
     private EditText edAccountHolderName, edAccountNo, edReEnterAccountNo, edIFSCCode;
     private TextView accountHolderName_error, accountNumber_error, reEnterAccountNumber_error, IFSCCode_error, bankName_error;
+    private ProgressDialog pDialog;
+    KeyGenerator keyGenerator;
+    SecretKey secretKey;
+    byte[] IV = new byte[16];
+    SecureRandom random;
 
     public BankDetailsFragment() {
         // Required empty public constructor
@@ -87,7 +107,6 @@ public class BankDetailsFragment extends Fragment {
         edIFSCCode = view.findViewById(R.id.edIFSCCOde);
         spinnerBankName = view.findViewById(R.id.spinnerBankName);
         btnBankInfoSubmit = view.findViewById(R.id.btnBankInfoSubmit);
-
         accountHolderName_error = view.findViewById(R.id.accountHolderName_error);
         accountNumber_error = view.findViewById(R.id.accountNumber_error);
         reEnterAccountNumber_error = view.findViewById(R.id.reEnterAccountNumber_error);
@@ -95,24 +114,28 @@ public class BankDetailsFragment extends Fragment {
         bankName_error = view.findViewById(R.id.bankName_error);
         sharedPreferences = context.getSharedPreferences(getString(R.string.shared_preferences), Context.MODE_PRIVATE);
         edAccountHolderName.setFilters(new InputFilter[]{Common.letterFilter});
-
         if (Common.isNetworkConnected(context)) {
             getBankNames();
         } else {
             Common.networkDisconnectionDialog(context);
         }
 
+
+        initEncryption();
+
         btnBankInfoSubmit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (checkValidInput()) {
+                    sharedPreferences.edit().putString(getString(R.string.loan_source), "LOANTAP").apply();
                     if (Common.isNetworkConnected(context)) {
-//                        if (sharedPreferences.getString(getString(R.string.loan_application_status), "").equalsIgnoreCase(getString(R.string.upward))) {
-//                            generateLoanApplication(completeUpwardApplication(bankDetailsData()));
-//                        } else {
-//                            postBankDetails(bankDetailsData());
-//                        }
+                        if (sharedPreferences.getString(getString(R.string.loan_source), "").equalsIgnoreCase(getString(R.string.upward))) {
+                            generateLoanApplication(completeUpwardApplication(bankDetailsData()));
+                        } else if (sharedPreferences.getString(getString(R.string.loan_source), "").equalsIgnoreCase(getString(R.string.loantap))) {
+                            generateLoanTapApplication(createLoanApplication(bankDetailsData()));
+                        } else {
                             postBankDetails(bankDetailsData());
+                        }
                     } else {
                         Common.networkDisconnectionDialog(context);
                     }
@@ -121,6 +144,32 @@ public class BankDetailsFragment extends Fragment {
         });
         ((DashboardActivity) context).setNavigationTitle(getString(R.string.title_bank_details));
         return view;
+    }
+
+    private void initEncryption() {
+        try {
+            keyGenerator = KeyGenerator.getInstance("AES");
+            keyGenerator.init(256);
+            random = new SecureRandom();
+            random.nextBytes(IV);
+            secretKey = keyGenerator.generateKey();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * create application LoanTap
+     *
+     * @param completeUpwardApplication
+     * @return
+     */
+    private AddApplication1 createLoanApplication(BankDetails bankDetailsData) {
+        String employeeDetailsString = sharedPreferences.getString(getString(R.string.employment_details), "");
+        AddApplication1 loanTapApplication = new Gson().fromJson(employeeDetailsString, AddApplication1.class);
+        loanTapApplication.setSalaryBankName(bankDetailsData.getBankName());
+        loanTapApplication.setSalaryAccountNo(bankDetailsData.getAccountNumber());
+        return loanTapApplication;
     }
 
     private UpwardLoanRequestModel completeUpwardApplication(BankDetails bankDetailsData) {
@@ -138,7 +187,7 @@ public class BankDetailsFragment extends Fragment {
         employmentDetails.setAadhaar(Long.parseLong(personalDetails.getAadhaarNumber()));
         employmentDetails.setPan(personalDetails.getPanNumber());
         employmentDetails.setSocialEmailId(personalDetails.getEmail());
-        employmentDetails.setAffiliateLoanIdentifier(Integer.parseInt(personalDetails.getAadhaarNumber().substring(7,12)));       //todo
+        employmentDetails.setAffiliateLoanIdentifier(Integer.parseInt(personalDetails.getAadhaarNumber().substring(7, 12)));       //todo
 //        employmentDetails.setAffiliateLoanIdentifier(sharedPreferences.getString(getString(R.string.loan_application_id),""));
         employmentDetails.setCompany(employmentDetails.getCompany());
         employmentDetails.setCurrentAddressLine1(employmentDetails.getCurrentAddressLine1());
@@ -424,32 +473,114 @@ public class BankDetailsFragment extends Fragment {
 
 
     /**
+     * generating loantap application
+     */
+    private void generateLoanTapApplication(AddApplication1 loantapApplication) {
+        showProgress(getActivity());
+        String url = APIClient.BASE_LOANTAP_URL + "transact";
+//        encrypt = encrypt(et.getText().toString().getBytes(), secretKey, IV);
+        Call<String> call = null;
+        try {
+            call = APIClient.getClient(APIClient.type.JSON)
+                    .generateLoanTapApplication(url, generateLoanTapToken(String.valueOf(Instant.now().toEpochMilli()).getBytes(),secretKey,IV), LOANTAPPRODUCTID, LOANTAPPARTNERID, loantapApplication);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        call.enqueue(new Callback<String>() {
+            @Override
+            public void onResponse(Call<String> call, Response<String> response) {
+                Log.d(TAG, "Response " + response.isSuccessful());
+                closeProgress();
+                if (response.code() == 200) {
+//todo                    replaceFragment(new DocumentUploadFragment());
+                } else {
+                    Log.e("BankDetailsFragment", "Error received" + response.code());
+                }
+                postBankDetails(bankDetailsData());
+            }
+
+            @Override
+            public void onFailure(Call<String> call, Throwable t) {
+                closeProgress();
+                t.printStackTrace();
+            }
+        });
+    }
+
+
+    /**
+     * The "[X-API-AUTH]" is to be generated while sending the request. It is generated by encrypting the
+     * current epoch time using the "[unique partner key]" and "AES-256-CBC" algorithm
+     * The generated hash is valid for 30sec's it will be expired after that, and the request will not be honoured
+     *
+     * @return
+     */
+    public static String generateLoanTapToken(byte[] plaintext, SecretKey key, byte[] IV) throws Exception {
+        Cipher cipher = Cipher.getInstance("AES");
+        SecretKeySpec keySpec = new SecretKeySpec(key.getEncoded(), "AES");
+        IvParameterSpec ivSpec = new IvParameterSpec(IV);
+        cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivSpec);
+        byte[] cipherText = cipher.doFinal(plaintext);
+        Log.e("AUTH LOANTAP",""+cipherText.toString());
+        return cipherText.toString();
+    }
+
+
+    /**
      * generate loan application on Upwards
      *
      * @param upwardRequest
      */
     private void generateLoanApplication(UpwardLoanRequestModel upwardRequest) {
-        String url = APIClient.BASE_UPWARD_URL + "loan/data/";
+        showProgress(getActivity());
+        String url = APIClient.BASE_UPWARD_PROD_URL + "loan/data/";
         Call<UpwardLoanResponse> call = APIClient.getClient(APIClient.type.JSON)
                 .generateLoanApplicationUpwards(url, upwardsUserID, upwardsAuthToken, upwardRequest);
         call.enqueue(new Callback<UpwardLoanResponse>() {
             @Override
             public void onResponse(Call<UpwardLoanResponse> call, Response<UpwardLoanResponse> response) {
                 Log.d(TAG, "Response " + response.isSuccessful());
-                if (response.code() == 200){
-                    sharedPreferences.edit().putString(getString(R.string.upwardResponse),new Gson().toJson((UpwardLoanResponse)response.body())).apply();
-                    sharedPreferences.edit().putString(getString(R.string.loan_application_status), getString(R.string.upward));
-                    replaceFragment(new UpwardTransitionFragment());
-                }else{
-                    Toast.makeText(getActivity(),response.body().getData().getErrorMessage(),Toast.LENGTH_LONG).show();
+                closeProgress();
+                if (response.code() == 200) {
+                    sharedPreferences.edit().putString(getString(R.string.upwardResponse), new Gson().toJson((UpwardLoanResponse) response.body())).apply();
+//todo                    replaceFragment(new DocumentUploadFragment());
+                } else {
+                    Log.e("BankDetailsFragment", "Error received" + response.code());
                 }
+                postBankDetails(bankDetailsData());
             }
 
             @Override
             public void onFailure(Call<UpwardLoanResponse> call, Throwable t) {
+                closeProgress();
                 t.printStackTrace();
             }
         });
     }
+
+
+    public void showProgress(Context ctx) {
+        try {
+            pDialog = new ProgressDialog(ctx);
+            pDialog.setMessage("Please Wait...");
+            pDialog.setCancelable(false);
+            pDialog.show();
+
+        } catch (Exception e) {
+            e.getMessage();
+        }
+
+    }
+
+    public void closeProgress() {
+        try {
+            if (pDialog != null) {
+                pDialog.dismiss();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 
 }

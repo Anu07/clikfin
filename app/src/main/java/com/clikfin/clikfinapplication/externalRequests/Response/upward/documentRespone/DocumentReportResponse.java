@@ -1,8 +1,8 @@
-package com.clikfin.clikfinapplication.externalRequests.Response;
+package com.clikfin.clikfinapplication.externalRequests.Response.upward.documentRespone;
 
 import com.google.gson.annotations.SerializedName;
 
-public class LoanStatusResponse{
+public class DocumentReportResponse{
 
 	@SerializedName("data")
 	private Data data;

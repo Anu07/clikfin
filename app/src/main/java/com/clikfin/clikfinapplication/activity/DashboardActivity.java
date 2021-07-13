@@ -33,6 +33,7 @@ import com.clikfin.clikfinapplication.R;
 import com.clikfin.clikfinapplication.fragment.AboutUsFragment;
 import com.clikfin.clikfinapplication.fragment.CibilCheckFragment;
 import com.clikfin.clikfinapplication.fragment.DashboardFragment;
+import com.clikfin.clikfinapplication.fragment.DocumentUploadFragment;
 import com.clikfin.clikfinapplication.fragment.EligibleCheckFragment;
 import com.clikfin.clikfinapplication.fragment.FAQFragment;
 import com.clikfin.clikfinapplication.fragment.OurPartnersFragment;

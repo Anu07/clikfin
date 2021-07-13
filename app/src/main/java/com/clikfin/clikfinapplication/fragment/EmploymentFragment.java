@@ -27,6 +27,7 @@ import com.clikfin.clikfinapplication.externalRequests.Request.EmployeeDetails;
 import com.clikfin.clikfinapplication.externalRequests.Request.PersonalDetails;
 import com.clikfin.clikfinapplication.externalRequests.Request.UpwardLoanRequestModel;
 import com.clikfin.clikfinapplication.externalRequests.Response.ApplyLoanResponse;
+import com.clikfin.clikfinapplication.loantap.AddApplication1;
 import com.clikfin.clikfinapplication.network.APICallbackInterface;
 import com.clikfin.clikfinapplication.network.APIClient;
 import com.clikfin.clikfinapplication.util.Common;
@@ -55,8 +56,8 @@ public class EmploymentFragment extends Fragment {
     String[] modeOfSalary;
     Spinner spinnerOfficeAddressState;
     private TextView loanPurposeError, organizationTypeError, designationExpError, totalWorkExpError, currentWorkExpError, employeeTypeError, companyNameError, officialEmailIdError, modeOfSalaryError, salaryError, officeAddressLine1Error, officeAddressLine2Error, officeAddressLandMarkError, officeAddressCityError, officeAddressStateError, officeAddressPinCodeError, officePhoneNumberError, applyLoanAmountError, tenureError, previousLoanAmountError, previousMonthlyEMIError, loanFinancierNameError;
-    static String upwardsUserID = "46";
-    static String upwardsAuthToken = "upwards_affiliate_46_1dFCVwCtQsr3c9ONhQWAJTQXUugAQOsY";
+    static String upwardsUserID = "33";
+    static String upwardsAuthToken = "upwards_affiliate_33_lqnQHlzf8oLrTI2pRxdGXcyF5DTxbYNY";
     FragmentActivity activity;
     Context context;
     Button btnNext;
@@ -151,12 +152,14 @@ public class EmploymentFragment extends Fragment {
         btnNext.setOnClickListener(v -> {
             if (checkValidInput()) {
                 if (Common.isNetworkConnected(context)) {
-//                    if (upwardConditionsMet(sendEmploymentInfoToServer())) {
-//                        sharedPreferences.edit().putString(getString(R.string.employment_details), new Gson().toJson(createUpwardRequest(sendEmploymentInfoToServer()))).apply();
-//                        replaceFragment(new BankDetailsFragment());
-//                    } else {
+                    if (upwardConditionsMet(sendEmploymentInfoToServer())) {
+                        if (sharedPreferences.getString(getString(R.string.loan_source), "").equalsIgnoreCase(getString(R.string.upward))) {
+                            sharedPreferences.edit().putString(getString(R.string.employment_details), new Gson().toJson(createUpwardRequest(sendEmploymentInfoToServer()))).apply();
+                        } else if (sharedPreferences.getString(getString(R.string.loan_source), "").equalsIgnoreCase(getString(R.string.loantap))) {
+                            sharedPreferences.edit().putString(getString(R.string.employment_details), new Gson().toJson(createLoanTapRequest(sendEmploymentInfoToServer()))).apply();
+                        }
                         postEmployeeInfo(sendEmploymentInfoToServer());
-//                    }
+                    }
                 } else {
                     Common.networkDisconnectionDialog(context);
                 }
@@ -166,6 +169,46 @@ public class EmploymentFragment extends Fragment {
         return view;
     }
 
+
+    /**
+     * create Loan Tap request
+     * @param empInfo
+     * @return
+     */
+    private AddApplication1 createLoanTapRequest(EmployeeDetails empInfo) {
+        String personalData = sharedPreferences.getString(getString(R.string.personal_details), "");
+        PersonalDetails pDetails = new Gson().fromJson(personalData, PersonalDetails.class);
+        AddApplication1 LoanTapApplication = new AddApplication1();
+        LoanTapApplication.setFullName(pDetails.getFirstName()+" "+pDetails.getLastName());
+        LoanTapApplication.setDob(pDetails.getDateOfBirth());
+        LoanTapApplication.setFathersName(pDetails.getFatherName());
+        LoanTapApplication.setGender(pDetails.getGender());
+        LoanTapApplication.setJobType(empInfo.getEmploymentType());
+        LoanTapApplication.setEmployerName(empInfo.getCompanyName());
+        LoanTapApplication.setAddressLandmark(pDetails.getCurrentAddressLandmark());
+        LoanTapApplication.setEducationalQualification(pDetails.getEducationalQualification());
+        LoanTapApplication.setHomeAddrLine1(pDetails.getPermanentAddressLine1());
+        LoanTapApplication.setHomeAddrLine2(pDetails.getPermanentAddressLine2());
+        LoanTapApplication.setHomeCity(pDetails.getPermanentAddressCity());
+        LoanTapApplication.setHomeOwnershipType(pDetails.getPermanentAddressType());
+        LoanTapApplication.setHomeZipcode(pDetails.getPermanentAddressPinCode());
+        LoanTapApplication.setFixedIncome(String.valueOf(empInfo.getSalary()));
+        LoanTapApplication.setMobileNumber(pDetails.getPhoneNumber());
+        LoanTapApplication.setEmploymentYear(empInfo.getCurrentExperience());
+        LoanTapApplication.setEmiOutflow(String.valueOf(empInfo.getMonthlyEMI()));
+        LoanTapApplication.setLoanCity(empInfo.getOfficialAddressCity());
+        LoanTapApplication.setMaritalStatus(pDetails.getMaritalStatus());
+        LoanTapApplication.setPanCard(pDetails.getPanNumber());
+        LoanTapApplication.setMaritalStatus(pDetails.getMaritalStatus());
+        LoanTapApplication.setMothersMaidenName(pDetails.getMotherName());
+        LoanTapApplication.setReqAmount(String.valueOf(empInfo.getAmount()));
+        LoanTapApplication.setReqTenure(empInfo.getTenure());
+        return LoanTapApplication;
+    }
+
+    /**
+     *  Upwards Loan Purpose ID
+     */
     private void populateLoanPurposeIdUpwards() {
         loanPurposeId.put("Family Function, Marriage etc", 3);
         loanPurposeId.put("Paying Other Loans, Credit Card Bills etc.", 8);
@@ -187,8 +230,11 @@ public class EmploymentFragment extends Fragment {
      * @return affiliate_user_id = 29 and affiliate_user_session_token = "upwards_affiliate_29_RgyR681BfHY9Vj3YF7yP6638xjhBqCry"
      */
     private boolean upwardConditionsMet(EmployeeDetails employeeDetails) {
-        if (employeeDetails.getSalary() >= 20000 && (employeeDetails.getAmount() > 20000 && employeeDetails.getAmount() < 250000)) {
-            sharedPreferences.edit().putString(getString(R.string.loan_application_status), getString(R.string.upward)).apply();
+        if ((employeeDetails.getSalary() >= 20000 && employeeDetails.getSalary() < 30000) && (employeeDetails.getAmount() >= 20000)) {
+            sharedPreferences.edit().putString(getString(R.string.loan_source), getString(R.string.upward)).apply();
+            return true;
+        } else if (employeeDetails.getSalary() >= 30000) {
+            sharedPreferences.edit().putString(getString(R.string.loan_source), getString(R.string.loantap)).apply();
             return true;
         }
         return false;
@@ -860,8 +906,13 @@ public class EmploymentFragment extends Fragment {
         return employeeDetails;
     }
 
-    private UpwardLoanRequestModel createUpwardRequest(EmployeeDetails employeeDetails) {
 
+    /**
+     * Upward Request
+     * @param employeeDetails
+     * @return
+     */
+    private UpwardLoanRequestModel createUpwardRequest(EmployeeDetails employeeDetails) {
         String personalData = sharedPreferences.getString(getString(R.string.personal_details), "");
         PersonalDetails pDetails = new Gson().fromJson(personalData, PersonalDetails.class);
         UpwardLoanRequestModel applicantDetails = new UpwardLoanRequestModel();
@@ -1072,7 +1123,7 @@ public class EmploymentFragment extends Fragment {
 
     /**
      * get qualifucatuointype Id
-     *3 Under Graduate
+     * 3 Under Graduate
      * 4 Graduate
      * 5 Post Graduate
      * 2 Other

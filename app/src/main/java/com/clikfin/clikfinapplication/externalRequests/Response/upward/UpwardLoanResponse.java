@@ -37,10 +37,7 @@ public class UpwardLoanResponse implements Parcelable {
 		this.meta = source.readString();
 	}
 
-	public UpwardLoanResponse() {
-	}
-
-	protected UpwardLoanResponse(Parcel in) {
+	public UpwardLoanResponse(Parcel in) {
 		this.data = in.readParcelable(Data.class.getClassLoader());
 		this.meta = in.readString();
 	}
