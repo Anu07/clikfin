@@ -12,15 +12,15 @@ android {
         exclude 'META-INF/NOTICE.txt'
         exclude 'META-INF/ASL2.0'
     }
-    compileSdkVersion 30
+    compileSdkVersion 29
     buildToolsVersion "29.0.2"
 
     defaultConfig {
         applicationId "com.clikfin.clikfinapplication"
         minSdkVersion 21
-        targetSdkVersion 30
-        versionCode 18
-        versionName "1.95"
+        targetSdkVersion 29
+        versionCode 22
+        versionName "1.99"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     compileOptions {
