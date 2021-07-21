@@ -127,12 +127,9 @@ public class BankDetailsFragment extends Fragment {
             @Override
             public void onClick(View view) {
                 if (checkValidInput()) {
-                    sharedPreferences.edit().putString(getString(R.string.loan_source), "LOANTAP").apply();
                     if (Common.isNetworkConnected(context)) {
                         if (sharedPreferences.getString(getString(R.string.loan_source), "").equalsIgnoreCase(getString(R.string.upward))) {
                             generateLoanApplication(completeUpwardApplication(bankDetailsData()));
-                        } else if (sharedPreferences.getString(getString(R.string.loan_source), "").equalsIgnoreCase(getString(R.string.loantap))) {
-                            generateLoanTapApplication(createLoanApplication(bankDetailsData()));
                         } else {
                             postBankDetails(bankDetailsData());
                         }
@@ -475,7 +472,7 @@ public class BankDetailsFragment extends Fragment {
     /**
      * generating loantap application
      */
-    private void generateLoanTapApplication(AddApplication1 loantapApplication) {
+    private void generateMyLoanTapApplication(AddApplication1 loantapApplication) {
         showProgress(getActivity());
         String url = APIClient.BASE_LOANTAP_URL + "transact";
 //        encrypt = encrypt(et.getText().toString().getBytes(), secretKey, IV);

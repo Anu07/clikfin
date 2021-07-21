@@ -230,13 +230,14 @@ public class EmploymentFragment extends Fragment {
      * @return affiliate_user_id = 29 and affiliate_user_session_token = "upwards_affiliate_29_RgyR681BfHY9Vj3YF7yP6638xjhBqCry"
      */
     private boolean upwardConditionsMet(EmployeeDetails employeeDetails) {
-        if ((employeeDetails.getSalary() >= 20000 && employeeDetails.getSalary() < 30000) && (employeeDetails.getAmount() >= 20000)) {
+//        if ((employeeDetails.getSalary() >= 20000 && employeeDetails.getSalary() < 30000) && (employeeDetails.getAmount() >= 20000)) {
+        if ((employeeDetails.getSalary() >= 20000) && (employeeDetails.getAmount() >= 20000)) {
             sharedPreferences.edit().putString(getString(R.string.loan_source), getString(R.string.upward)).apply();
             return true;
-        } else if (employeeDetails.getSalary() >= 30000) {
+        } /*todo else if (employeeDetails.getSalary() >= 30000) {
             sharedPreferences.edit().putString(getString(R.string.loan_source), getString(R.string.loantap)).apply();
             return true;
-        }
+        }*/
         return false;
     }
 

@@ -1389,6 +1389,10 @@
             android:text="@string/btn_next"
             android:enabled="false"
             android:textColor="@color/splash_color" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="50dp"/>
     </LinearLayout>
 
 

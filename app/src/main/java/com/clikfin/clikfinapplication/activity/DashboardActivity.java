@@ -77,6 +77,7 @@ public class DashboardActivity extends AppCompatActivity implements NavigationVi
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
 
         sideNavigationView = findViewById(R.id.side_navigation_view);
+        sideNavigationView.setItemIconTintList(null);
         bottomNavigationView=findViewById(R.id.bottom_navigation);
         View header = sideNavigationView.getHeaderView(0);
         tvUserName = (TextView) header.findViewById(R.id.tvUserName);
@@ -96,7 +97,6 @@ public class DashboardActivity extends AppCompatActivity implements NavigationVi
         SharedPreferences sharedPreferences = DashboardActivity.this.getSharedPreferences(getString(R.string.shared_preferences), Context.MODE_PRIVATE);
         tvUserName.setText(sharedPreferences.getString(getString(R.string.user_name), ""));
         tvUserEmail.setText(sharedPreferences.getString(getString(R.string.user_email), ""));
-
         getSupportFragmentManager().addOnBackStackChangedListener(new FragmentManager.OnBackStackChangedListener() {
             @Override
             public void onBackStackChanged() {

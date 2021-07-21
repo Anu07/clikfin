@@ -183,7 +183,7 @@ public class DocumentUploadFragment extends Fragment {
         if (sharedPreferences.getString(getString(R.string.loan_source), "").equals(getString(R.string.upward))) {
             String upwardResponseStr = sharedPreferences.getString(getString(R.string.upwardResponse), "");
             upwardResponse = new Gson().fromJson(upwardResponseStr, UpwardLoanResponse.class);
-            if ((upwardResponse != null && upwardResponse.getData().getErrorMessage().isEmpty()))
+            if ((upwardResponse != null && !upwardResponse.getData().getErrorMessage().isEmpty()))
                 getDocumentUploadedReport();
         }
         if (Common.isNetworkConnected(context)) {
@@ -322,8 +322,8 @@ public class DocumentUploadFragment extends Fragment {
             public void onClick(View v) {
                 if (sharedPreferences.getString(getString(R.string.loan_source), "").equals(getString(R.string.upward)) && (upwardResponse != null && upwardResponse.getData().getErrorMessage().isEmpty())) {
                     getDocumentUploadedReport();
-                    postAllDocumentUploadStatus();
                 } else {
+                    postAllDocumentUploadStatus();
                     if (checkAllMandatoryDocUploaded()) {
                         postAllDocumentUploadStatus();
                     } else {
@@ -351,9 +351,16 @@ public class DocumentUploadFragment extends Fragment {
                 super.onResponse(call, response);
                 if (response.code() == 200) {
                     editor.putString(getString(R.string.loan_application_status), getString(R.string.under_review));
-                    editor.apply();
-                    replaceFragment(new LoanApplicationStatusFragment());
+                }else{
+                    try {
+                        Toast.makeText(context, "" +  response.errorBody().string(), Toast.LENGTH_LONG).show();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    editor.putString(getString(R.string.loan_application_status), getString(R.string.rejected));
                 }
+                editor.apply();
+                replaceFragment(new LoanApplicationStatusFragment());
             }
 
             @Override
@@ -1130,11 +1137,10 @@ public class DocumentUploadFragment extends Fragment {
 
                 if (file != null) {
                     if (Common.isNetworkConnected(context)) {
-                        if (sharedPreferences.getString(getString(R.string.loan_source), "").equals(getString(R.string.upward)) && (upwardResponse != null && upwardResponse.getData().getErrorMessage().isEmpty()) ){
+                        if (sharedPreferences.getString(getString(R.string.loan_source), "").equals(getString(R.string.upward)) && (upwardResponse != null && upwardResponse.getData().getErrorMessage().isEmpty())) {
                             uploadDocumentUrl(getType(filePath));
-                        } else {
-                            callClikFinDocCall();
                         }
+                        callClikFinDocCall();
                     } else {
                         Common.networkDisconnectionDialog(context);
                     }

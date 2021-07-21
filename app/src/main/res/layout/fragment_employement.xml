@@ -602,8 +602,8 @@
             android:drawableEnd="@drawable/ic_call"
             android:elevation="5dp"
             android:hint="@string/ed_land_line_no"
-            android:inputType="phone"
-            android:maxLength="10"
+            android:digits="0123456789+"
+            android:maxLength="15"
             android:padding="@dimen/input_field_padding"
             android:textSize="@dimen/small_text" />
 

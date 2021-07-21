@@ -14,8 +14,8 @@
     </style>
 
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar">
-        <item name="android:textColorPrimary">@color/splash_color</item>
-        <item name="android:textColorSecondary">@color/splash_color</item>
+        <item name="android:textColorPrimary">@color/white</item>
+        <item name="android:textColorSecondary">@color/white</item>
     </style>
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
@@ -23,7 +23,10 @@
         <item name="android:textSize">14sp</item>
     </style>
 
-
+    <style name="BottomNavigationTheme" parent="Theme.AppCompat.Light">
+        <item name="colorPrimary">@color/yellow</item>
+        <item name="android:textColorSecondary">@color/darkBlueBg</item>
+    </style>
     <style name="AppTheme.Translucent" parent="Theme.AppCompat.NoActionBar">
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>

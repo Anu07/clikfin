@@ -2,19 +2,19 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/bottom_navigation_dashboard"
-        android:icon="@drawable/bottom_nav_item_home"
+        android:icon="@drawable/icon_awesome_home"
         android:title="@string/bottom_navigation_home"/>
     <item
         android:id="@+id/bottom_navigation_cibil_check"
-        android:icon="@drawable/bottom_nav_item_cibil"
+        android:icon="@drawable/cibil"
         android:title="@string/bottom_navigation_cibil_check"/>
     <item
         android:id="@+id/bottom_navigation_user_profile"
-        android:icon="@drawable/bottom_nav_item_user"
+        android:icon="@drawable/group_3701"
         android:title="@string/bottom_navigation_user_profile"/>
     <item
         android:id="@+id/bottom_navigation_emi_cal"
-        android:icon="@drawable/bottom_nav_item_eligibility_cal"
+        android:icon="@drawable/group_3702"
         android:title="@string/bottom_navigation_emi_calculator"/>
 
 

@@ -3,6 +3,7 @@ package com.clikfin.clikfinapplication.fragment;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,8 +26,11 @@ import com.clikfin.clikfinapplication.adapter.OnBoard_Adapter;
 import com.clikfin.clikfinapplication.model.OnBoardItem;
 
 import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class OnBoardFragment extends Fragment implements ViewPager.OnPageChangeListener, View.OnClickListener {
+    private static final int NUM_PAGES = 2;
     int previous_pos = 0;
     final ArrayList<OnBoardItem> onBoardItems = new ArrayList<>();
     private LinearLayout pager_indicator;
@@ -34,7 +38,11 @@ public class OnBoardFragment extends Fragment implements ViewPager.OnPageChangeL
     private ImageView[] dots;
     private OnBoard_Adapter mAdapter;
     private Button btn_get_started;
-
+    int currentPage = 0;
+    Timer timer;
+    final long DELAY_MS = 500;//delay in milliseconds before task is to be executed
+    final long PERIOD_MS = 3000; // time in milliseconds between successive task executions.
+    ViewPager on_boarding_pager;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -48,7 +56,7 @@ public class OnBoardFragment extends Fragment implements ViewPager.OnPageChangeL
 
 
         btn_get_started = view.findViewById(R.id.btn_get_started);
-        ViewPager on_boarding_pager = view.findViewById(R.id.pager_introduction);
+        on_boarding_pager = view.findViewById(R.id.pager_introduction);
         pager_indicator = view.findViewById(R.id.viewPagerCountDots);
         loadData();
         mAdapter = new OnBoard_Adapter(getActivity(), onBoardItems);
@@ -58,8 +66,32 @@ public class OnBoardFragment extends Fragment implements ViewPager.OnPageChangeL
         btn_get_started.setOnClickListener(this);
 
         setUiPageViewController();
-
+        automateViewPagerSwiping();
         return view;
+    }
+
+    private void automateViewPagerSwiping() {
+        final long DELAY_MS = 500;//delay in milliseconds before task is to be executed
+        final long PERIOD_MS = 3000; // time in milliseconds between successive task executions.
+        final Handler handler = new Handler();
+        final Runnable update = new Runnable() {
+            public void run() {
+               /* if (on_boarding_pager.getCurrentItem() == mAdapter.getCount() - 1) { //adapter is your custom ViewPager's adapter
+                    on_boarding_pager.setCurrentItem(0);
+                }
+                else {*/
+                    on_boarding_pager.setCurrentItem(on_boarding_pager.getCurrentItem() + 1, true);
+//                }
+            }
+        };
+
+        timer = new Timer(); // This will create a new Thread
+        timer.schedule(new TimerTask() { // task to be scheduled
+            @Override
+            public void run() {
+                handler.post(update);
+            }
+        }, DELAY_MS, PERIOD_MS);
     }
 
 
@@ -67,7 +99,7 @@ public class OnBoardFragment extends Fragment implements ViewPager.OnPageChangeL
 
         int[] header = {R.string.ob_header1, R.string.ob_header2, R.string.ob_header3};
         int[] desc = {R.string.ob_desc1, R.string.ob_desc2, R.string.ob_desc3};
-        int[] imageId = {R.drawable.intro_info_1, R.drawable.intro_info_2, R.drawable.intro_info_3};
+        int[] imageId = {R.drawable.group_83, R.drawable.group_314, R.drawable.group_442};
 
 
         for (int i = 0; i < imageId.length; i++) {
@@ -75,7 +107,6 @@ public class OnBoardFragment extends Fragment implements ViewPager.OnPageChangeL
             item.setImageID(imageId[i]);
             item.setTitle(getResources().getString(header[i]));
             item.setDescription(getResources().getString(desc[i]));
-
             onBoardItems.add(item);
         }
     }

@@ -73,6 +73,7 @@ disbursal of loan. This helps in providing a smoother and seamless experience wh
     <string name="apply_now">Apply Now</string>
     <string name="check_now">Check Now</string>
     <string name="refer_now">Refer Now</string>
+    <string name="referearn">Refer and Earn</string>
     <string name="search">Search</string>
 
     <string name="name_empty_error">Please enter your name</string>
@@ -383,6 +384,12 @@ disbursal of loan. This helps in providing a smoother and seamless experience wh
     <string name="loan_source">loan source</string>
     <string name="pre_rejection">Pre-Rejection</string>
     <string name="loantap">LOANTAP</string>
+    <string name="emi_calc">EMI Calculator</string>
+    <string name="cibil_chck">CIBIL Check</string>
+    <string name="click_now">Click Now</string>
+    <string name="loan_under_review">Yeah!! Loan applied successfully.</string>
+    <string name="money_disbursed">Money disbursed successfully</string>
+    <string name="loan_approved">Loan Approved</string>
     <bool name="is_login_with_mobile_number">false</bool>
 
 

@@ -284,29 +284,6 @@ public class BasicDetailsFragment extends Fragment {
         });
         ((DashboardActivity) context).setNavigationTitle(getString(R.string.title_personal_info));
 
-      /*  bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
-        bottomSheetBehavior.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
-            @Override
-            public void onStateChanged(@NonNull View bottomSheet, int newState) {
-                // React to state change
-                if(newState==bottomSheetBehavior.STATE_EXPANDED){
-
-                }
-            }
-
-            @Override
-            public void onSlide(@NonNull View bottomSheet, float slideOffset) {
-                // React to dragging events
-               // blur_background.setBackgroundColor();
-            }
-        });
-
-
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(context);
-        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(recyclerView.getContext(),
-                linearLayoutManager.getOrientation());
-        recyclerView.setLayoutManager(linearLayoutManager);
-        recyclerView.addItemDecoration(dividerItemDecoration);*/
         return view;
     }
 
