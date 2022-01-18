@@ -1,16 +1,12 @@
 package com.clikfin.clikfinapplication.fragment;
 
-import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.Bundle;
-import android.provider.DocumentsContract;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -18,7 +14,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
@@ -36,10 +31,8 @@ import com.clikfin.clikfinapplication.model.OnBoardItem;
 import com.clikfin.clikfinapplication.network.APICallbackInterface;
 import com.clikfin.clikfinapplication.network.APIClient;
 import com.clikfin.clikfinapplication.util.Common;
-import com.clikfin.clikfinapplication.util.FileUtils;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -106,7 +99,7 @@ public class DashboardFragment extends Fragment {
 
         SharedPreferences sharedPreferences = context.getSharedPreferences(getString(R.string.shared_preferences), Context.MODE_PRIVATE);
         String loanApplicationId = sharedPreferences.getString(getString(R.string.loan_application_id), "");
-        sharedPreferences.edit().putString(getString(R.string.loan_source), getString(R.string.upward)).apply();
+//        sharedPreferences.edit().putString(getString(R.string.loan_source), getString(R.string.loantap)).apply();
 
 
         btnApplyLoan.setOnClickListener(new View.OnClickListener() {
@@ -114,14 +107,15 @@ public class DashboardFragment extends Fragment {
             public void onClick(View v) {
 
                 if (Common.isNetworkConnected(context)) {
-                    if (sharedPreferences.getString(getString(R.string.loan_source), "").equals(getString(R.string.upward))) {
+//                    if (sharedPreferences.getString(getString(R.string.loan_source), "").equals(getString(R.string.upward))) {
 //                        fragmentNavigation();
 //                    } else {
                         if (!loanApplicationId.equalsIgnoreCase("")) {
                             getLoanApplicationStatus();
                         }
-                        fragmentNavigation();
-                    }
+//                    }
+                    fragmentNavigation();
+
                 } else {
                     Common.networkDisconnectionDialog(context);
                 }
@@ -147,6 +141,7 @@ public class DashboardFragment extends Fragment {
         return view;
     }
 
+    //todo
     private void fragmentNavigation() {
         SharedPreferences sharedPreferences = context.getSharedPreferences(getString(R.string.shared_preferences), Context.MODE_PRIVATE);
         String loanApplicationStatus = sharedPreferences.getString(getString(R.string.loan_application_status), "");
@@ -159,7 +154,7 @@ public class DashboardFragment extends Fragment {
         } else if (loanApplicationStatus.equalsIgnoreCase(getString(R.string.bank_details_pending))) {
             replaceFragment(new BankDetailsFragment());
         } else if (loanApplicationStatus.equalsIgnoreCase(getString(R.string.documents_pending))) {
-            replaceFragment(new BankDetailsFragment());
+            replaceFragment(new DocumentUploadFragment());
         } else if (loanApplicationStatus.equalsIgnoreCase(getString(R.string.under_review))) {
             replaceFragment(new LoanApplicationStatusFragment());
         } else if (loanApplicationStatus.equalsIgnoreCase(getString(R.string.disbursement_pending))) {

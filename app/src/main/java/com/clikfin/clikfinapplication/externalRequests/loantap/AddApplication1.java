@@ -1,4 +1,4 @@
-package com.clikfin.clikfinapplication.loantap;
+package com.clikfin.clikfinapplication.externalRequests.loantap;
 
 import android.os.Parcel;
 import android.os.Parcelable;

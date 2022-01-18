@@ -17,16 +17,16 @@ public class APIClient {
     //private static final String BASE_URL = "http://192.168.1.5:9999";
     //private static final String BASE_URL = "http://15.207.2.168";   'http://app.clikfin.com/info/
     public static final String BASE_URL = "http://app.clikfin.com";
-    public static final String BASE_UPWARD_URL = "https://uat1.upwards.in/af/v1/customer/"; //testing
-    public static final String BASE_UPWARD_WEB_URL = "https://uat1.web.upwards.in/"; //testing
-    public static final String BASE_LOANTAP_URL = " https://api.loantap.in/"; //testing
-    public static final String LOANTAP_APIKEY = "H3kYj9iKiAxOHI2Eu4hYJDlqcyFL09iC";
+    public static final String BASE_LOANTAP_URL = " https://api.loantap.in/v1-application/"; //testing
+    public static final String LOANTAP_APIKEY = "H3kYj9iKiAxOHI2Eu4hYJDlqcyFL09iC"; //PROD KEY
+    public static final String LOANTAP_DEVKEY = "hkokBhIaqMsUXhpeXrkf7ZKlRUhNr7dz";
+    public static final String BASE_DEV_LOANTAP_URL = "https://api.thearks.in/v1-application/"; //testing
+
     public static final String LOANTAPPRODUCTID = "lt-personal-term-loan-reducing";
     public static final String LOANTAPPARTNERID="clikfin";
 
 
     public static final String BASE_UPWARD_PROD_URL = "https://leads.backend.upwards.in/af/v1/customer/"; //production
-    public static final String BASE_UPWARD_PROD_WEB_URL = "https://leads.backend.upwards.in/"; //production
 
     private static ApiInterface jsonApiInterface;
     private static ApiInterface stringApiInterface;

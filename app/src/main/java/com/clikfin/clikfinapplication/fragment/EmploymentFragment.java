@@ -27,7 +27,7 @@ import com.clikfin.clikfinapplication.externalRequests.Request.EmployeeDetails;
 import com.clikfin.clikfinapplication.externalRequests.Request.PersonalDetails;
 import com.clikfin.clikfinapplication.externalRequests.Request.UpwardLoanRequestModel;
 import com.clikfin.clikfinapplication.externalRequests.Response.ApplyLoanResponse;
-import com.clikfin.clikfinapplication.loantap.AddApplication1;
+import com.clikfin.clikfinapplication.externalRequests.loantap.AddApplication1;
 import com.clikfin.clikfinapplication.network.APICallbackInterface;
 import com.clikfin.clikfinapplication.network.APIClient;
 import com.clikfin.clikfinapplication.util.Common;
@@ -155,11 +155,12 @@ public class EmploymentFragment extends Fragment {
                     if (upwardConditionsMet(sendEmploymentInfoToServer())) {
                         if (sharedPreferences.getString(getString(R.string.loan_source), "").equalsIgnoreCase(getString(R.string.upward))) {
                             sharedPreferences.edit().putString(getString(R.string.employment_details), new Gson().toJson(createUpwardRequest(sendEmploymentInfoToServer()))).apply();
-                        } else if (sharedPreferences.getString(getString(R.string.loan_source), "").equalsIgnoreCase(getString(R.string.loantap))) {
-                            sharedPreferences.edit().putString(getString(R.string.employment_details), new Gson().toJson(createLoanTapRequest(sendEmploymentInfoToServer()))).apply();
+                            sharedPreferences.edit().putString(getString(R.string.employment_details_loantap), new Gson().toJson(createLoanTapRequest(sendEmploymentInfoToServer()))).apply();
                         }
-                        postEmployeeInfo(sendEmploymentInfoToServer());
+//                        } else if (sharedPreferences.getString(getString(R.string.loan_source), "").equalsIgnoreCase(getString(R.string.loantap))) {
+//                        }
                     }
+                    postEmployeeInfo(sendEmploymentInfoToServer());
                 } else {
                     Common.networkDisconnectionDialog(context);
                 }
@@ -172,6 +173,7 @@ public class EmploymentFragment extends Fragment {
 
     /**
      * create Loan Tap request
+     *
      * @param empInfo
      * @return
      */
@@ -179,7 +181,7 @@ public class EmploymentFragment extends Fragment {
         String personalData = sharedPreferences.getString(getString(R.string.personal_details), "");
         PersonalDetails pDetails = new Gson().fromJson(personalData, PersonalDetails.class);
         AddApplication1 LoanTapApplication = new AddApplication1();
-        LoanTapApplication.setFullName(pDetails.getFirstName()+" "+pDetails.getLastName());
+        LoanTapApplication.setFullName(pDetails.getFirstName() + " " + pDetails.getLastName());
         LoanTapApplication.setDob(pDetails.getDateOfBirth());
         LoanTapApplication.setFathersName(pDetails.getFatherName());
         LoanTapApplication.setGender(pDetails.getGender());
@@ -207,7 +209,7 @@ public class EmploymentFragment extends Fragment {
     }
 
     /**
-     *  Upwards Loan Purpose ID
+     * Upwards Loan Purpose ID
      */
     private void populateLoanPurposeIdUpwards() {
         loanPurposeId.put("Family Function, Marriage etc", 3);
@@ -225,17 +227,19 @@ public class EmploymentFragment extends Fragment {
 
     /**
      * Checking upwards conditions
+     * for now, user above >12k will be sent to both upwards and loantap.
      *
      * @param employeeDetails
      * @return affiliate_user_id = 29 and affiliate_user_session_token = "upwards_affiliate_29_RgyR681BfHY9Vj3YF7yP6638xjhBqCry"
      */
     private boolean upwardConditionsMet(EmployeeDetails employeeDetails) {
-        if ((employeeDetails.getSalary() >= 20000 && employeeDetails.getSalary() < 30000) && (employeeDetails.getAmount() >= 20000)) {
+//         && employeeDetails.getSalary() < 30000
+        if ((employeeDetails.getSalary() >= 20000) && (employeeDetails.getAmount() >= 20000)) {
             sharedPreferences.edit().putString(getString(R.string.loan_source), getString(R.string.upward)).apply();
             return true;
-        } else if (employeeDetails.getSalary() >= 30000) {
-            sharedPreferences.edit().putString(getString(R.string.loan_source), getString(R.string.loantap)).apply();
-            return true;
+//todo        } else if (employeeDetails.getSalary() >= 20000) {
+//            sharedPreferences.edit().putString(getString(R.string.loan_source), getString(R.string.loantap)).apply();
+//            return true;
         }
         return false;
     }
@@ -414,7 +418,7 @@ public class EmploymentFragment extends Fragment {
             Common.setError(salaryError, "Salary " + getString(R.string.input_field_empty), context);
             edSalary.requestFocus();
             return false;
-        } else if (Integer.parseInt(edSalary.getText().toString()) < 20000) {
+        } else if (Integer.parseInt(edSalary.getText().toString()) < 13000) {
             Common.setError(salaryError, getString(R.string.min_salary), context);
             edSalary.requestFocus();
             return false;
@@ -909,6 +913,7 @@ public class EmploymentFragment extends Fragment {
 
     /**
      * Upward Request
+     *
      * @param employeeDetails
      * @return
      */
@@ -932,7 +937,7 @@ public class EmploymentFragment extends Fragment {
         applicantDetails.setPan(pDetails.getPanNumber());
         applicantDetails.setWorkEmailId(pDetails.getEmail());
         applicantDetails.setSocialEmailId(pDetails.getEmail());
-        applicantDetails.setCurrentCompanyJoiningDate("2021-01-01");        //todo
+        applicantDetails.setCurrentCompanyJoiningDate("2022-01-01");        //todo
         applicantDetails.setDob(pDetails.getDateOfBirth());
         applicantDetails.setFirstName(pDetails.getFirstName());
         applicantDetails.setFatherFirstName(pDetails.getFatherName());

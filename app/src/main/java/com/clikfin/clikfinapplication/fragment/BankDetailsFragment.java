@@ -1,6 +1,12 @@
 
 package com.clikfin.clikfinapplication.fragment;
 
+import static com.clikfin.clikfinapplication.fragment.EmploymentFragment.upwardsAuthToken;
+import static com.clikfin.clikfinapplication.fragment.EmploymentFragment.upwardsUserID;
+import static com.clikfin.clikfinapplication.network.APIClient.LOANTAPPARTNERID;
+import static com.clikfin.clikfinapplication.network.APIClient.LOANTAPPRODUCTID;
+import static com.clikfin.clikfinapplication.network.APIClient.LOANTAP_APIKEY;
+
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -32,33 +38,24 @@ import com.clikfin.clikfinapplication.externalRequests.Request.UpwardLoanRequest
 import com.clikfin.clikfinapplication.externalRequests.Response.ApplyLoanResponse;
 import com.clikfin.clikfinapplication.externalRequests.Response.BankDetailsResponse;
 import com.clikfin.clikfinapplication.externalRequests.Response.UploadDocumentResponse;
+import com.clikfin.clikfinapplication.externalRequests.Response.loantapResponse.LoanTapAddApplicationResponse;
 import com.clikfin.clikfinapplication.externalRequests.Response.upward.UpwardLoanResponse;
-import com.clikfin.clikfinapplication.loantap.AddApplication1;
+import com.clikfin.clikfinapplication.externalRequests.loantap.AddApplication1;
 import com.clikfin.clikfinapplication.network.APICallbackInterface;
 import com.clikfin.clikfinapplication.network.APIClient;
+import com.clikfin.clikfinapplication.util.AESUtil;
+import com.clikfin.clikfinapplication.util.BaaSEncryptDecrypt;
 import com.clikfin.clikfinapplication.util.Common;
+import com.clikfin.clikfinapplication.util.EncryptUtils;
 import com.google.gson.Gson;
 
 import java.lang.annotation.Annotation;
-import java.security.SecureRandom;
-import java.time.Instant;
-
-import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Converter;
 import retrofit2.Response;
-
-import static com.clikfin.clikfinapplication.fragment.EmploymentFragment.upwardsAuthToken;
-import static com.clikfin.clikfinapplication.fragment.EmploymentFragment.upwardsUserID;
-import static com.clikfin.clikfinapplication.network.APIClient.LOANTAPPARTNERID;
-import static com.clikfin.clikfinapplication.network.APIClient.LOANTAPPRODUCTID;
 
 @SuppressWarnings("All")
 public class BankDetailsFragment extends Fragment {
@@ -73,10 +70,6 @@ public class BankDetailsFragment extends Fragment {
     private EditText edAccountHolderName, edAccountNo, edReEnterAccountNo, edIFSCCode;
     private TextView accountHolderName_error, accountNumber_error, reEnterAccountNumber_error, IFSCCode_error, bankName_error;
     private ProgressDialog pDialog;
-    KeyGenerator keyGenerator;
-    SecretKey secretKey;
-    byte[] IV = new byte[16];
-    SecureRandom random;
 
     public BankDetailsFragment() {
         // Required empty public constructor
@@ -120,22 +113,21 @@ public class BankDetailsFragment extends Fragment {
             Common.networkDisconnectionDialog(context);
         }
 
-
-        initEncryption();
-
         btnBankInfoSubmit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (checkValidInput()) {
-                    sharedPreferences.edit().putString(getString(R.string.loan_source), "LOANTAP").apply();
+//                    sharedPreferences.edit().putString(getString(R.string.loan_source), "LOANTAP").apply();
                     if (Common.isNetworkConnected(context)) {
                         if (sharedPreferences.getString(getString(R.string.loan_source), "").equalsIgnoreCase(getString(R.string.upward))) {
                             generateLoanApplication(completeUpwardApplication(bankDetailsData()));
-                        } else if (sharedPreferences.getString(getString(R.string.loan_source), "").equalsIgnoreCase(getString(R.string.loantap))) {
                             generateLoanTapApplication(createLoanApplication(bankDetailsData()));
-                        } else {
-                            postBankDetails(bankDetailsData());
-                        }
+                        } /*else if (sharedPreferences.getString(getString(R.string.loan_source), "").equalsIgnoreCase(getString(R.string.loantap))) {
+//todo                            generateLoanTapApplication(createLoanApplication(bankDetailsData()));
+                            generateLoanApplication(completeUpwardApplication(bankDetailsData()));
+
+                        }*/
+                        postBankDetails(bankDetailsData());
                     } else {
                         Common.networkDisconnectionDialog(context);
                     }
@@ -146,17 +138,6 @@ public class BankDetailsFragment extends Fragment {
         return view;
     }
 
-    private void initEncryption() {
-        try {
-            keyGenerator = KeyGenerator.getInstance("AES");
-            keyGenerator.init(256);
-            random = new SecureRandom();
-            random.nextBytes(IV);
-            secretKey = keyGenerator.generateKey();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 
     /**
      * create application LoanTap
@@ -165,7 +146,7 @@ public class BankDetailsFragment extends Fragment {
      * @return
      */
     private AddApplication1 createLoanApplication(BankDetails bankDetailsData) {
-        String employeeDetailsString = sharedPreferences.getString(getString(R.string.employment_details), "");
+        String employeeDetailsString = sharedPreferences.getString(getString(R.string.employment_details_loantap), "");
         AddApplication1 loanTapApplication = new Gson().fromJson(employeeDetailsString, AddApplication1.class);
         loanTapApplication.setSalaryBankName(bankDetailsData.getBankName());
         loanTapApplication.setSalaryAccountNo(bankDetailsData.getAccountNumber());
@@ -195,6 +176,7 @@ public class BankDetailsFragment extends Fragment {
         employmentDetails.setCurrentCompanyAddressLine1(employmentDetails.getCurrentAddressLine1());
         employmentDetails.setCurrentCompanyAddressLine2(employmentDetails.getCurrentAddressLine2());
         employmentDetails.setCurrentCity(employmentDetails.getCurrentCity());
+        employmentDetails.setProfessionTypeId(28);
         employmentDetails.setCurrentCompanyCity(employmentDetails.getCurrentCompanyCity());
         employmentDetails.setCurrentCompanyPincode(employmentDetails.getCurrentCompanyPincode());
         employmentDetails.setCurrentPincode(employmentDetails.getCurrentPincode());
@@ -255,118 +237,120 @@ public class BankDetailsFragment extends Fragment {
         SharedPreferences sharedPreferences = context.getSharedPreferences(getString(R.string.shared_preferences), Context.MODE_PRIVATE);
         String authToken = sharedPreferences.getString(getString(R.string.user_auth_token), "");
         String loanApplicationId = sharedPreferences.getString(getString(R.string.loan_application_id), "");
-        String url = APIClient.BASE_URL + "/application/" + loanApplicationId + "/bankDetails";
-        Call<BankDetailsResponse> call = APIClient.getClient(APIClient.type.JSON).postBankDetails(url, authToken, bankDetails);
-        call.enqueue(new APICallbackInterface<BankDetailsResponse>(context) {
-            @Override
-            public void onResponse(Call<BankDetailsResponse> call, Response<BankDetailsResponse> response) {
-                super.onResponse(call, response);
-                switch (response.code()) {
-                    case 200:
-                        if (response.body() != null) {
-                            BankDetailsResponse bankDeatilRespons = response.body();
-                            SharedPreferences.Editor editor = Common.getSharedPreferencesEditor(activity);
-                            UploadDocumentResponse uploadDocumentResponse = response.body().getDocumentStatus();
+        if (loanApplicationId != null) {
+            String url = APIClient.BASE_URL + "/application/" + loanApplicationId + "/bankDetails";
+            Call<BankDetailsResponse> call = APIClient.getClient(APIClient.type.JSON).postBankDetails(url, authToken, bankDetails);
+            call.enqueue(new APICallbackInterface<BankDetailsResponse>(context) {
+                @Override
+                public void onResponse(Call<BankDetailsResponse> call, Response<BankDetailsResponse> response) {
+                    super.onResponse(call, response);
+                    switch (response.code()) {
+                        case 200:
+                            if (response.body() != null) {
+                                BankDetailsResponse bankDeatilRespons = response.body();
+                                SharedPreferences.Editor editor = Common.getSharedPreferencesEditor(activity);
+                                UploadDocumentResponse uploadDocumentResponse = response.body().getDocumentStatus();
 
-                            editor.putBoolean(getString(R.string.isUpload_upload_pan_card), uploadDocumentResponse.getPAN_CARD().isUploaded());
-                            editor.putBoolean(getString(R.string.isUpload_current_residency_proof), uploadDocumentResponse.getCURRENT_ADDRESS_PROOF().isUploaded());
-                            editor.putBoolean(getString(R.string.isUpload_pay_slip_1), uploadDocumentResponse.getPAY_SLIP_1().isUploaded());
-                            editor.putBoolean(getString(R.string.isUpload_pay_slip_2), uploadDocumentResponse.getPAY_SLIP_2().isUploaded());
-                            editor.putBoolean(getString(R.string.isUpload_pay_slip_3), uploadDocumentResponse.getPAY_SLIP_3().isUploaded());
-                            editor.putBoolean(getString(R.string.isUpload_bank_statement_1), uploadDocumentResponse.getBANK_STATEMENT_1().isUploaded());
-                            editor.putBoolean(getString(R.string.isUpload_bank_statement_2), uploadDocumentResponse.getBANK_STATEMENT_2().isUploaded());
-                            editor.putBoolean(getString(R.string.isUpload_bank_statement_3), uploadDocumentResponse.getBANK_STATEMENT_3().isUploaded());
-                            editor.putBoolean(getString(R.string.isUpload_aadhar_front), uploadDocumentResponse.getAADHAAR_CARD_FRONT().isUploaded());
-                            editor.putBoolean(getString(R.string.isUpload_aadhar_back), uploadDocumentResponse.getAADHAAR_CARD_BACK().isUploaded());
-                            editor.putBoolean(getString(R.string.isUpload_photo), uploadDocumentResponse.getPHOTO().isUploaded());
-                            editor.putBoolean(getString(R.string.isUpload_company_id), uploadDocumentResponse.getCOMPANY_ID().isUploaded());
+                                editor.putBoolean(getString(R.string.isUpload_upload_pan_card), uploadDocumentResponse.getPAN_CARD().isUploaded());
+                                editor.putBoolean(getString(R.string.isUpload_current_residency_proof), uploadDocumentResponse.getCURRENT_ADDRESS_PROOF().isUploaded());
+                                editor.putBoolean(getString(R.string.isUpload_pay_slip_1), uploadDocumentResponse.getPAY_SLIP_1().isUploaded());
+                                editor.putBoolean(getString(R.string.isUpload_pay_slip_2), uploadDocumentResponse.getPAY_SLIP_2().isUploaded());
+                                editor.putBoolean(getString(R.string.isUpload_pay_slip_3), uploadDocumentResponse.getPAY_SLIP_3().isUploaded());
+                                editor.putBoolean(getString(R.string.isUpload_bank_statement_1), uploadDocumentResponse.getBANK_STATEMENT_1().isUploaded());
+                                editor.putBoolean(getString(R.string.isUpload_bank_statement_2), uploadDocumentResponse.getBANK_STATEMENT_2().isUploaded());
+                                editor.putBoolean(getString(R.string.isUpload_bank_statement_3), uploadDocumentResponse.getBANK_STATEMENT_3().isUploaded());
+                                editor.putBoolean(getString(R.string.isUpload_aadhar_front), uploadDocumentResponse.getAADHAAR_CARD_FRONT().isUploaded());
+                                editor.putBoolean(getString(R.string.isUpload_aadhar_back), uploadDocumentResponse.getAADHAAR_CARD_BACK().isUploaded());
+                                editor.putBoolean(getString(R.string.isUpload_photo), uploadDocumentResponse.getPHOTO().isUploaded());
+                                editor.putBoolean(getString(R.string.isUpload_company_id), uploadDocumentResponse.getCOMPANY_ID().isUploaded());
 
 
-                            editor.putBoolean(getString(R.string.isMandatory_upload_pan_card), uploadDocumentResponse.getPAN_CARD().isMandatory());
-                            editor.putBoolean(getString(R.string.isMandatory_current_residency_proof), uploadDocumentResponse.getCURRENT_ADDRESS_PROOF().isMandatory());
-                            editor.putBoolean(getString(R.string.isMandatory_pay_slip_1), uploadDocumentResponse.getPAY_SLIP_1().isMandatory());
-                            editor.putBoolean(getString(R.string.isMandatory_pay_slip_2), uploadDocumentResponse.getPAY_SLIP_2().isMandatory());
-                            editor.putBoolean(getString(R.string.isMandatory_pay_slip_3), uploadDocumentResponse.getPAY_SLIP_3().isMandatory());
-                            editor.putBoolean(getString(R.string.isMandatory_bank_statement_1), uploadDocumentResponse.getBANK_STATEMENT_1().isMandatory());
-                            editor.putBoolean(getString(R.string.isMandatory_bank_statement_2), uploadDocumentResponse.getBANK_STATEMENT_2().isMandatory());
-                            editor.putBoolean(getString(R.string.isMandatory_bank_statement_3), uploadDocumentResponse.getBANK_STATEMENT_3().isMandatory());
-                            editor.putBoolean(getString(R.string.isMandatory_aadhar_front), uploadDocumentResponse.getAADHAAR_CARD_FRONT().isMandatory());
-                            editor.putBoolean(getString(R.string.isMandatory_aadhar_back), uploadDocumentResponse.getAADHAAR_CARD_BACK().isMandatory());
-                            editor.putBoolean(getString(R.string.isMandatory_photo), uploadDocumentResponse.getPHOTO().isMandatory());
-                            editor.putBoolean(getString(R.string.isMandatory_company_id), uploadDocumentResponse.getCOMPANY_ID().isMandatory());
+                                editor.putBoolean(getString(R.string.isMandatory_upload_pan_card), uploadDocumentResponse.getPAN_CARD().isMandatory());
+                                editor.putBoolean(getString(R.string.isMandatory_current_residency_proof), uploadDocumentResponse.getCURRENT_ADDRESS_PROOF().isMandatory());
+                                editor.putBoolean(getString(R.string.isMandatory_pay_slip_1), uploadDocumentResponse.getPAY_SLIP_1().isMandatory());
+                                editor.putBoolean(getString(R.string.isMandatory_pay_slip_2), uploadDocumentResponse.getPAY_SLIP_2().isMandatory());
+                                editor.putBoolean(getString(R.string.isMandatory_pay_slip_3), uploadDocumentResponse.getPAY_SLIP_3().isMandatory());
+                                editor.putBoolean(getString(R.string.isMandatory_bank_statement_1), uploadDocumentResponse.getBANK_STATEMENT_1().isMandatory());
+                                editor.putBoolean(getString(R.string.isMandatory_bank_statement_2), uploadDocumentResponse.getBANK_STATEMENT_2().isMandatory());
+                                editor.putBoolean(getString(R.string.isMandatory_bank_statement_3), uploadDocumentResponse.getBANK_STATEMENT_3().isMandatory());
+                                editor.putBoolean(getString(R.string.isMandatory_aadhar_front), uploadDocumentResponse.getAADHAAR_CARD_FRONT().isMandatory());
+                                editor.putBoolean(getString(R.string.isMandatory_aadhar_back), uploadDocumentResponse.getAADHAAR_CARD_BACK().isMandatory());
+                                editor.putBoolean(getString(R.string.isMandatory_photo), uploadDocumentResponse.getPHOTO().isMandatory());
+                                editor.putBoolean(getString(R.string.isMandatory_company_id), uploadDocumentResponse.getCOMPANY_ID().isMandatory());
 
-                            editor.putString(getString(R.string.loan_application_id), bankDeatilRespons.getApplicationId());
-                            editor.putString(getString(R.string.loan_application_status), bankDeatilRespons.getStatus());
-                            editor.apply();
-                            if (bankDeatilRespons.getStatus().equalsIgnoreCase(getString(R.string.documents_pending))) {
-                                replaceFragment(new DocumentUploadFragment());
-                            } else if (bankDeatilRespons.getStatus().equalsIgnoreCase(getString(R.string.under_review))) {
-                                replaceFragment(new LoanApplicationStatusFragment());
-                            } else if (bankDeatilRespons.getStatus().equalsIgnoreCase(getString(R.string.disbursement_pending))) {
-                                replaceFragment(new LoanApplicationStatusFragment());
-                            } else if (bankDeatilRespons.getStatus().equalsIgnoreCase(getString(R.string.disbursed))) {
-                                replaceFragment(new LoanApplicationStatusFragment());
-                            } else if (bankDeatilRespons.getStatus().equalsIgnoreCase(getString(R.string.rejected))) {
-                                replaceFragment(new LoanApplicationStatusFragment());
+                                editor.putString(getString(R.string.loan_application_id), bankDeatilRespons.getApplicationId());
+                                editor.putString(getString(R.string.loan_application_status), bankDeatilRespons.getStatus());
+                                editor.apply();
+                                if (bankDeatilRespons.getStatus().equalsIgnoreCase(getString(R.string.documents_pending))) {
+                                    replaceFragment(new DocumentUploadFragment());
+                                } else if (bankDeatilRespons.getStatus().equalsIgnoreCase(getString(R.string.under_review))) {
+                                    replaceFragment(new LoanApplicationStatusFragment());
+                                } else if (bankDeatilRespons.getStatus().equalsIgnoreCase(getString(R.string.disbursement_pending))) {
+                                    replaceFragment(new LoanApplicationStatusFragment());
+                                } else if (bankDeatilRespons.getStatus().equalsIgnoreCase(getString(R.string.disbursed))) {
+                                    replaceFragment(new LoanApplicationStatusFragment());
+                                } else if (bankDeatilRespons.getStatus().equalsIgnoreCase(getString(R.string.rejected))) {
+                                    replaceFragment(new LoanApplicationStatusFragment());
+                                }
                             }
-                        }
-                        break;
-                    case 400:
-                        Converter<ResponseBody, BankDetails> bankDetailsConverter = APIClient.getRetrofit().responseBodyConverter(BankDetails.class, new Annotation[0]);
-                        try {
-                            setServerErrorMsg(bankDetailsConverter.convert(response.errorBody()));
-                        } catch (Exception e) {
-                            Common.logExceptionToCrashlaytics(e);
-                        }
-                        break;
-                    case 403:
-                    case 401:
-                        Toast.makeText(context, getString(R.string.logged_out), Toast.LENGTH_LONG).show();
-                        FragmentManager fragmentManager = activity.getSupportFragmentManager();
-                        final FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-                        fragmentManager.popBackStack();
-                        fragmentTransaction.replace(R.id.apply_loan_frame, new LoginFragment());
-                        fragmentTransaction.commit();
-                        break;
-                    case 409:
-                        try {
-                            Converter<ResponseBody, ApplyLoanResponse> PersonalDetailsResponsConverter = APIClient.getRetrofit().responseBodyConverter(ApplyLoanResponse.class, new Annotation[0]);
-                            ApplyLoanResponse bankDeatilRespons = PersonalDetailsResponsConverter.convert(response.errorBody());
-                            SharedPreferences.Editor editor = Common.getSharedPreferencesEditor(activity);
-                            editor.putString(getString(R.string.loan_application_id), bankDeatilRespons.getApplicationId());
-                            editor.putString(getString(R.string.loan_application_status), bankDeatilRespons.getStatus());
-                            editor.commit();
-                            if (bankDeatilRespons.getStatus().equalsIgnoreCase(getString(R.string.documents_pending))) {
-                                replaceFragment(new DocumentUploadFragment());
-                            } else if (bankDeatilRespons.getStatus().equalsIgnoreCase(getString(R.string.under_review))) {
-                                replaceFragment(new LoanApplicationStatusFragment());
-                            } else if (bankDeatilRespons.getStatus().equalsIgnoreCase(getString(R.string.disbursement_pending))) {
-                                replaceFragment(new LoanApplicationStatusFragment());
-                            } else if (bankDeatilRespons.getStatus().equalsIgnoreCase(getString(R.string.disbursed))) {
-                                replaceFragment(new LoanApplicationStatusFragment());
-                            } else if (bankDeatilRespons.getStatus().equalsIgnoreCase(getString(R.string.rejected))) {
-                                replaceFragment(new LoanApplicationStatusFragment());
+                            break;
+                        case 400:
+                            Converter<ResponseBody, BankDetails> bankDetailsConverter = APIClient.getRetrofit().responseBodyConverter(BankDetails.class, new Annotation[0]);
+                            try {
+                                setServerErrorMsg(bankDetailsConverter.convert(response.errorBody()));
+                            } catch (Exception e) {
+                                Common.logExceptionToCrashlaytics(e);
+                            }
+                            break;
+                        case 403:
+                        case 401:
+                            Toast.makeText(context, getString(R.string.logged_out), Toast.LENGTH_LONG).show();
+                            FragmentManager fragmentManager = activity.getSupportFragmentManager();
+                            final FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                            fragmentManager.popBackStack();
+                            fragmentTransaction.replace(R.id.apply_loan_frame, new LoginFragment());
+                            fragmentTransaction.commit();
+                            break;
+                        case 409:
+                            try {
+                                Converter<ResponseBody, ApplyLoanResponse> PersonalDetailsResponsConverter = APIClient.getRetrofit().responseBodyConverter(ApplyLoanResponse.class, new Annotation[0]);
+                                ApplyLoanResponse bankDeatilRespons = PersonalDetailsResponsConverter.convert(response.errorBody());
+                                SharedPreferences.Editor editor = Common.getSharedPreferencesEditor(activity);
+                                editor.putString(getString(R.string.loan_application_id), bankDeatilRespons.getApplicationId());
+                                editor.putString(getString(R.string.loan_application_status), bankDeatilRespons.getStatus());
+                                editor.commit();
+                                if (bankDeatilRespons.getStatus().equalsIgnoreCase(getString(R.string.documents_pending))) {
+                                    replaceFragment(new DocumentUploadFragment());
+                                } else if (bankDeatilRespons.getStatus().equalsIgnoreCase(getString(R.string.under_review))) {
+                                    replaceFragment(new LoanApplicationStatusFragment());
+                                } else if (bankDeatilRespons.getStatus().equalsIgnoreCase(getString(R.string.disbursement_pending))) {
+                                    replaceFragment(new LoanApplicationStatusFragment());
+                                } else if (bankDeatilRespons.getStatus().equalsIgnoreCase(getString(R.string.disbursed))) {
+                                    replaceFragment(new LoanApplicationStatusFragment());
+                                } else if (bankDeatilRespons.getStatus().equalsIgnoreCase(getString(R.string.rejected))) {
+                                    replaceFragment(new LoanApplicationStatusFragment());
+                                }
+
+                            } catch (Exception e) {
+                                Common.logExceptionToCrashlaytics(e);
                             }
 
-                        } catch (Exception e) {
-                            Common.logExceptionToCrashlaytics(e);
-                        }
+                            break;
+                        case 500:
+                            Toast.makeText(context, getString(R.string.server_error), Toast.LENGTH_LONG).show();
+                            break;
+                    }
 
-                        break;
-                    case 500:
-                        Toast.makeText(context, getString(R.string.server_error), Toast.LENGTH_LONG).show();
-                        break;
                 }
 
-            }
-
-            @Override
-            public void onFailure(Call<BankDetailsResponse> call, Throwable t) {
-                super.onFailure(call, t);
-                Common.logAPIFailureToCrashlyatics(t);
-                Toast.makeText(context, getString(R.string.internet_connectivity_issue), Toast.LENGTH_LONG).show();
-            }
-        });
+                @Override
+                public void onFailure(Call<BankDetailsResponse> call, Throwable t) {
+                    super.onFailure(call, t);
+                    Common.logAPIFailureToCrashlyatics(t);
+                    Toast.makeText(context, getString(R.string.internet_connectivity_issue), Toast.LENGTH_LONG).show();
+                }
+            });
+        }
     }
 
     public void replaceFragment(Fragment fragment) {
@@ -479,50 +463,39 @@ public class BankDetailsFragment extends Fragment {
         showProgress(getActivity());
         String url = APIClient.BASE_LOANTAP_URL + "transact";
 //        encrypt = encrypt(et.getText().toString().getBytes(), secretKey, IV);
-        Call<String> call = null;
+        Call<LoanTapAddApplicationResponse> call = null;
         try {
+            BaaSEncryptDecrypt.setup();
             call = APIClient.getClient(APIClient.type.JSON)
-                    .generateLoanTapApplication(url, generateLoanTapToken(String.valueOf(Instant.now().toEpochMilli()).getBytes(),secretKey,IV), LOANTAPPRODUCTID, LOANTAPPARTNERID, loantapApplication);
+                    .generateLoanTapApplication(url, BaaSEncryptDecrypt.encrypt(String.valueOf(System.currentTimeMillis()/1000L)), LOANTAPPRODUCTID, LOANTAPPARTNERID, loantapApplication);
+            call.enqueue(new Callback<LoanTapAddApplicationResponse>() {
+                @Override
+                public void onResponse(Call<LoanTapAddApplicationResponse> call, Response<LoanTapAddApplicationResponse> response) {
+                    Log.d(TAG, "Response " + response.isSuccessful());
+                    closeProgress();
+                    if (response.code() == 200) {
+                        if (response.body().getAddApplication1() != null) {
+                            sharedPreferences.edit().putString("LOANTAPAPPID", response.body().getAddApplication1().getAnswer().getData().getLappId()).apply();
+//                            replaceFragment(new DocumentUploadFragment());
+                        } else {
+                            Toast.makeText(getActivity(), "Auth Token Expired", Toast.LENGTH_LONG).show();
+                        }
+
+                    } else {
+                        Log.e("BankDetailsFragment", "Error received" + response.code());
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<LoanTapAddApplicationResponse> call, Throwable t) {
+                    closeProgress();
+                    t.printStackTrace();
+                }
+            });
         } catch (Exception e) {
             e.printStackTrace();
         }
-        call.enqueue(new Callback<String>() {
-            @Override
-            public void onResponse(Call<String> call, Response<String> response) {
-                Log.d(TAG, "Response " + response.isSuccessful());
-                closeProgress();
-                if (response.code() == 200) {
-//todo                    replaceFragment(new DocumentUploadFragment());
-                } else {
-                    Log.e("BankDetailsFragment", "Error received" + response.code());
-                }
-                postBankDetails(bankDetailsData());
-            }
 
-            @Override
-            public void onFailure(Call<String> call, Throwable t) {
-                closeProgress();
-                t.printStackTrace();
-            }
-        });
-    }
-
-
-    /**
-     * The "[X-API-AUTH]" is to be generated while sending the request. It is generated by encrypting the
-     * current epoch time using the "[unique partner key]" and "AES-256-CBC" algorithm
-     * The generated hash is valid for 30sec's it will be expired after that, and the request will not be honoured
-     *
-     * @return
-     */
-    public static String generateLoanTapToken(byte[] plaintext, SecretKey key, byte[] IV) throws Exception {
-        Cipher cipher = Cipher.getInstance("AES");
-        SecretKeySpec keySpec = new SecretKeySpec(key.getEncoded(), "AES");
-        IvParameterSpec ivSpec = new IvParameterSpec(IV);
-        cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivSpec);
-        byte[] cipherText = cipher.doFinal(plaintext);
-        Log.e("AUTH LOANTAP",""+cipherText.toString());
-        return cipherText.toString();
     }
 
 
@@ -547,7 +520,7 @@ public class BankDetailsFragment extends Fragment {
                 } else {
                     Log.e("BankDetailsFragment", "Error received" + response.code());
                 }
-                postBankDetails(bankDetailsData());
+//                postBankDetails(bankDetailsData());
             }
 
             @Override

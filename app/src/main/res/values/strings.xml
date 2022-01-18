@@ -243,7 +243,7 @@ disbursal of loan. This helps in providing a smoother and seamless experience wh
     <string name="select_educational_qualification">Please select Educational Qualification</string>
     <string name="select_mode_of_salary">Please select mode of salary</string>
     <string name="select_tenure_period">Please select tenure period</string>
-    <string name="min_salary">Salary can not be less than 20K</string>
+    <string name="min_salary">Salary can not be less than 13K</string>
     <string name="min_loan_amount">Loan amount can not be less than 20000</string>
     <string name="upload_doc_msg">Please upload all documents</string>
     <string name="references_pending_msg">Your loan application is under review</string>
@@ -383,6 +383,7 @@ disbursal of loan. This helps in providing a smoother and seamless experience wh
     <string name="loan_source">loan source</string>
     <string name="pre_rejection">Pre-Rejection</string>
     <string name="loantap">LOANTAP</string>
+    <string name="employment_details_loantap">employment details loantap</string>
     <bool name="is_login_with_mobile_number">false</bool>
 
 

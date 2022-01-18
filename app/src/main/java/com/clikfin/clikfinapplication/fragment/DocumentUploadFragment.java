@@ -6,6 +6,7 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.ActivityNotFoundException;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -14,6 +15,7 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -23,7 +25,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -32,6 +33,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
@@ -50,24 +52,41 @@ import com.clikfin.clikfinapplication.externalRequests.Request.DocumentUrlGenera
 import com.clikfin.clikfinapplication.externalRequests.Response.UploadDocName;
 import com.clikfin.clikfinapplication.externalRequests.Response.UploadDocumentErrorResponse;
 import com.clikfin.clikfinapplication.externalRequests.Response.UploadDocumentResponse;
+import com.clikfin.clikfinapplication.externalRequests.Response.loantapResponse.EnquireResponse.Documents;
+import com.clikfin.clikfinapplication.externalRequests.Response.loantapResponse.EnquireResponse.EnquireResponse;
+import com.clikfin.clikfinapplication.externalRequests.Response.loantapResponse.upload.UploadDocResponse;
 import com.clikfin.clikfinapplication.externalRequests.Response.upward.UpwardLoanResponse;
 import com.clikfin.clikfinapplication.externalRequests.Response.upward.docUpload.DocumentURLGenerationResponse;
 import com.clikfin.clikfinapplication.externalRequests.Response.upward.documentRespone.Data;
 import com.clikfin.clikfinapplication.externalRequests.Response.upward.documentRespone.DocumentReportResponse;
 import com.clikfin.clikfinapplication.externalRequests.Response.upward.updateStatus.StatusDocumentResponse;
+import com.clikfin.clikfinapplication.externalRequests.loantap.LoanTapUploadDocumentRequest;
+import com.clikfin.clikfinapplication.externalRequests.loantap.UploadDocument1;
+import com.clikfin.clikfinapplication.externalRequests.loantap.enquireRequest.DocumentsStatus;
+import com.clikfin.clikfinapplication.externalRequests.loantap.enquireRequest.EnquireRequest;
 import com.clikfin.clikfinapplication.network.APICallbackInterface;
 import com.clikfin.clikfinapplication.network.APIClient;
+import com.clikfin.clikfinapplication.util.AESUtil;
+import com.clikfin.clikfinapplication.util.AppFileUtils;
+import com.clikfin.clikfinapplication.util.BaaSEncryptDecrypt;
 import com.clikfin.clikfinapplication.util.Common;
-import com.clikfin.clikfinapplication.util.FileUtils;
+import com.clikfin.clikfinapplication.util.EncryptUtils;
 import com.google.gson.Gson;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.net.URLEncoder;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -85,8 +104,13 @@ import retrofit2.Response;
 
 import static com.clikfin.clikfinapplication.fragment.EmploymentFragment.upwardsAuthToken;
 import static com.clikfin.clikfinapplication.fragment.EmploymentFragment.upwardsUserID;
+import static com.clikfin.clikfinapplication.network.APIClient.LOANTAPPARTNERID;
+import static com.clikfin.clikfinapplication.network.APIClient.LOANTAPPRODUCTID;
+import static com.clikfin.clikfinapplication.network.APIClient.LOANTAP_APIKEY;
 
 public class DocumentUploadFragment extends Fragment {
+    private static final String TAG = "LoanTapDocUploadFrag";
+    private static int size=0;
     LinearLayout layBankStatements;
     Button btnUploadDocDone;
     TextView tvPanUpload, tvAadharUpload, tvResidencyProofUpload, tvBankStatementUpload, tvPaySlip, tvPhotoUpload, tvCompanyIDUpload;
@@ -95,11 +119,13 @@ public class DocumentUploadFragment extends Fragment {
     TextView tvUploadDocName, tvUploadDocMsg;
     Button btnSelectFileTOUpload, btnCancelFileToUpload, btnUploadFile;
     ImageView imgCamera;
+    String fileType;
     static Uri fileUri;
+    HashMap<String, Boolean> loanTapDocs = new HashMap<>();
     File file;
     CheckBox chkFilePassword;
     private ProgressDialog pDialog;
-
+    public static final int SELECT_DOC_FILE_CODE = 1001;
     private static final int PICK_PDF_FILE = 2;
 
     EditText edFilePassword;
@@ -131,6 +157,7 @@ public class DocumentUploadFragment extends Fragment {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -185,7 +212,22 @@ public class DocumentUploadFragment extends Fragment {
             upwardResponse = new Gson().fromJson(upwardResponseStr, UpwardLoanResponse.class);
             if ((upwardResponse != null && upwardResponse.getData().getErrorMessage().isEmpty()))
                 getDocumentUploadedReport();
-        }
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                   getLoanTapDocumentUploadedReport();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } /*else if (sharedPreferences.getString(getString(R.string.loan_source), "").equals(getString(R.string.loantap))) {
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//todo                    getLoanTapDocumentUploadedReport();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }*/
         if (Common.isNetworkConnected(context)) {
             getUploadDocument();
         } else {
@@ -337,9 +379,56 @@ public class DocumentUploadFragment extends Fragment {
 
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void getLoanTapDocumentUploadedReport() {
+        String url = APIClient.BASE_DEV_LOANTAP_URL + "enquire";
+        Call<EnquireResponse> call = APIClient.getClient(APIClient.type.JSON)
+                .enquireLoanTapDocuments(url, BaaSEncryptDecrypt.encrypt(String.valueOf(System.currentTimeMillis()/1000L)), LOANTAPPRODUCTID, LOANTAPPARTNERID, createEnquireRequest());
+        call.enqueue(new Callback<EnquireResponse>() {
+            @Override
+            public void onResponse(Call<EnquireResponse> call, Response<EnquireResponse> response) {
+                EnquireResponse enquireResponse = response.body();
+                if(enquireResponse.getDocumentsStatus()!=null){
+                    Documents docsKycResponse = enquireResponse.getDocumentsStatus().getAnswer().getDocuments();
+                    if (docsKycResponse.getKyc().getIsCompleted().equals("no")) {
+                        if (docsKycResponse.getKyc().getAddressProof().getIsUploaded().equals("no")) {
+                            loanTapDocs.put(docsKycResponse.getKyc().getAddressProof().getFileName(), false);
+                        } else if (docsKycResponse.getOthers().getIsCompleted().equals("no")) {
+                            loanTapDocs.put(docsKycResponse.getOthers().getFileName(), false);
+                        } else if (docsKycResponse.getSalarySlip().getIsCompleted().equals("no")) {
+                            loanTapDocs.put(docsKycResponse.getSalarySlip().getSalarySlipAll092021().getFileName(), false);
+                        } else if (docsKycResponse.getBankStatement().getIsCompleted().equals("no")) {
+                            if(docsKycResponse.getBankStatement().getIndividualFiles().getBankStatement072021().getIsUploaded().equals("no")){
+                                loanTapDocs.put(docsKycResponse.getBankStatement().getIndividualFiles().getBankStatement072021().getFileName(), false);
+                            }else if(docsKycResponse.getBankStatement().getIndividualFiles().getBankStatement082021().getIsUploaded().equals("no")){
+                                loanTapDocs.put(docsKycResponse.getBankStatement().getIndividualFiles().getBankStatement082021().getFileName(), false);
+                            }else if(docsKycResponse.getBankStatement().getIndividualFiles().getBankStatement092021().getIsUploaded().equals("no")){
+                                loanTapDocs.put(docsKycResponse.getBankStatement().getIndividualFiles().getBankStatement092021().getFileName(), false);
+                            }
+                        } else {
+                            loanTapDocs.clear();
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<EnquireResponse> call, Throwable t) {
+                Log.e(TAG, "onFailure: "+t.getMessage() );
+            }
+        });
+    }
+
+    private EnquireRequest createEnquireRequest() {
+        EnquireRequest enquireRequest = new EnquireRequest();
+        DocumentsStatus docStatus = new DocumentsStatus();
+        docStatus.setApplicationId(sharedPreferences.getString("LOANTAPAPPID", ""));
+        enquireRequest.setDocumentsStatus(docStatus);
+        return enquireRequest;
+    }
+
 
     private void postAllDocumentUploadStatus() {
-
         SharedPreferences sharedPreferences = context.getSharedPreferences(getString(R.string.shared_preferences), Context.MODE_PRIVATE);
         String authToken = sharedPreferences.getString(getString(R.string.user_auth_token), "");
         String loanApplicationId = sharedPreferences.getString(getString(R.string.loan_application_id), "");
@@ -462,6 +551,37 @@ public class DocumentUploadFragment extends Fragment {
                 .setNegativeButton("Close App", okListener)
                 .create()
                 .show();
+    }
+
+
+    @Nullable
+    public String createCopyAndReturnRealPath(
+            @NonNull Context context, @NonNull Uri uri) {
+        final ContentResolver contentResolver = context.getContentResolver();
+        if (contentResolver == null)
+            return null;
+
+        // Create file path inside app's data dir
+        String filePath = context.getApplicationInfo().dataDir + File.separator + "temp_file"+getType(fileType);
+        file = new File(filePath);
+        try {
+            InputStream inputStream = contentResolver.openInputStream(uri);
+            if (inputStream == null)
+                return null;
+            OutputStream outputStream = new FileOutputStream(file);
+            byte[] buf = new byte[1024];
+            int len;
+            while ((len = inputStream.read(buf)) > 0)
+                outputStream.write(buf, 0, len);
+            outputStream.close();
+            inputStream.close();
+        } catch (IOException ignore) {
+            return null;
+        }
+
+        size = Integer.parseInt(String.valueOf(file.length() / 1024));
+        Log.e("SIZE",""+size);
+        return file.getAbsolutePath();
     }
 
     private static File getOutputMediaFile(int type) {
@@ -635,10 +755,10 @@ public class DocumentUploadFragment extends Fragment {
         call.enqueue(new Callback<DocumentURLGenerationResponse>() {
             @Override
             public void onResponse(Call<DocumentURLGenerationResponse> call, Response<DocumentURLGenerationResponse> response) {
+                closeProgress();
                 if (response.code() == 200 && response.body().getData().getErrorMessage().isEmpty()) {
                     uploadDocument(response.body());
                 } else {
-                    closeProgress();
                     Toast.makeText(getActivity(), "Some error occurred", Toast.LENGTH_LONG).show();
                 }
             }
@@ -682,7 +802,7 @@ public class DocumentUploadFragment extends Fragment {
 
             @Override
             public void onFailure(Call<Void> call, Throwable t) {
-                closeProgress();
+//                closeProgress();
                 t.printStackTrace();
             }
         });
@@ -718,7 +838,7 @@ public class DocumentUploadFragment extends Fragment {
             }
         });
     }
-
+//4a469082-8af7-41f7-940e-97453defa969
     private void callClikFinDocCall() {
         String loanApplicationId = sharedPreferences.getString(getString(R.string.loan_application_id), "");
         String url = APIClient.BASE_URL + "/application/" + loanApplicationId + "/upload/" + uploadDocType;
@@ -751,7 +871,6 @@ public class DocumentUploadFragment extends Fragment {
      *
      * @return
      */
-
     private DocumentStatusRequest createUpdateStatusRequest() {
         DocumentStatusRequest docRequest = new DocumentStatusRequest();
         docRequest.setCustomerId(upwardResponse.getData().getLoanData().getCustomerId());
@@ -1058,6 +1177,7 @@ public class DocumentUploadFragment extends Fragment {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     private void showUploadDialog(String docName) {
         uploadDocName = docName;
         dialog = new Dialog(context);
@@ -1075,6 +1195,7 @@ public class DocumentUploadFragment extends Fragment {
         dialog.show();
         Intent picIntent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
         picIntent.addCategory(Intent.CATEGORY_OPENABLE);
+        picIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
         picIntent.setAction(Intent.ACTION_OPEN_DOCUMENT);
         if (uploadDocType.equalsIgnoreCase(getString(R.string.doc_bank_statement_1)) || uploadDocType.equalsIgnoreCase(getString(R.string.doc_bank_statement_2)) || uploadDocType.equalsIgnoreCase(getString(R.string.doc_bank_statement_3)) || uploadDocType.equalsIgnoreCase(getString(R.string.doc_pay_slip_1)) || uploadDocType.equalsIgnoreCase(getString(R.string.doc_pay_slip_2)) || uploadDocType.equalsIgnoreCase(getString(R.string.doc_pay_slip_3))) {
             imgCamera.setVisibility(View.GONE);
@@ -1091,22 +1212,16 @@ public class DocumentUploadFragment extends Fragment {
             picIntent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
 //            openFile();
         }
-        chkFilePassword.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
-                    edFilePassword.setVisibility(View.VISIBLE);
-                } else {
-                    edFilePassword.setVisibility(View.GONE);
-                }
+        chkFilePassword.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) {
+                edFilePassword.setVisibility(View.VISIBLE);
+            } else {
+                edFilePassword.setVisibility(View.GONE);
             }
         });
-        btnSelectFileTOUpload.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                picIntent.putExtra("return_data", true);
-                startActivityForResult(picIntent, Constants.SELECT_DOC_FILE_CODE);
-            }
+        btnSelectFileTOUpload.setOnClickListener(v -> {
+            picIntent.putExtra("return_data", true);
+            startActivityForResult(picIntent, Constants.SELECT_DOC_FILE_CODE);
         });
         imgCamera.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -1124,28 +1239,86 @@ public class DocumentUploadFragment extends Fragment {
                 dialog.dismiss();
             }
         });
-        btnUploadFile.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        btnUploadFile.setOnClickListener(v -> {
 
-                if (file != null) {
-                    if (Common.isNetworkConnected(context)) {
-                        if (sharedPreferences.getString(getString(R.string.loan_source), "").equals(getString(R.string.upward)) && (upwardResponse != null && upwardResponse.getData().getErrorMessage().isEmpty()) ){
-                            uploadDocumentUrl(getType(filePath));
-                        } else {
-                            callClikFinDocCall();
+            if (file != null) {
+                if (Common.isNetworkConnected(context)) {
+                    if (sharedPreferences.getString(getString(R.string.loan_source), "").equals(getString(R.string.upward))
+                            && (upwardResponse != null && upwardResponse.getData().getErrorMessage().isEmpty())) {
+                        uploadDocumentUrl(getType(filePath));
+//                    } else if (sharedPreferences.getString(getString(R.string.loan_source), "").equals(getString(R.string.loantap))) {
+                        try {
+                          uploadDocumentLoanTap(generateLoanTapUploadDocumentRequest(uploadDocType));
+                        } catch (IOException e) {
+                            e.printStackTrace();
                         }
                     } else {
-                        Common.networkDisconnectionDialog(context);
+                        callClikFinDocCall();
                     }
-
                 } else {
-                    Toast.makeText(context, "Please select file to upload", Toast.LENGTH_LONG).show();
+                    Common.networkDisconnectionDialog(context);
                 }
 
+            } else {
+                Toast.makeText(context, "Please select file to upload", Toast.LENGTH_LONG).show();
             }
+
         });
 
+    }
+
+    /**
+     * LoanTap upload Document Requets
+     *
+     * @return
+     * @param uploadDocType
+     */
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private LoanTapUploadDocumentRequest generateLoanTapUploadDocumentRequest(String uploadDocType) throws IOException {
+        Path path
+                = Paths.get(file.getPath());
+        byte[] fileContent = Files.readAllBytes(path);
+
+        LoanTapUploadDocumentRequest loanTapUploadRequest = new LoanTapUploadDocumentRequest();
+        UploadDocument1 uploadDoc = new UploadDocument1();
+        uploadDoc.setFile(Base64.getEncoder().withoutPadding().encodeToString(fileContent));
+        uploadDoc.setExt(AppFileUtils.getFileExtension(file.getName()));
+        uploadDoc.setFileName("address_proof");     //todo
+        uploadDoc.setApplicationId(sharedPreferences.getString("LOANTAPAPPID", ""));
+        loanTapUploadRequest.setUploadDocument1(uploadDoc);
+        return loanTapUploadRequest;
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void uploadDocumentLoanTap(LoanTapUploadDocumentRequest uploadRequest) {
+        showProgress(getActivity());
+        String url = APIClient.BASE_LOANTAP_URL + "transact";
+        Call<UploadDocResponse> call = null;
+        try {
+            call = APIClient.getClient(APIClient.type.JSON)
+                    .uploadLoanTapDocument(url,BaaSEncryptDecrypt.encrypt(String.valueOf(System.currentTimeMillis()/1000L)), LOANTAPPRODUCTID, LOANTAPPARTNERID, uploadRequest);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        call.enqueue(new Callback<UploadDocResponse>() {
+            @Override
+            public void onResponse(Call<UploadDocResponse> call, Response<UploadDocResponse> response) {
+                Log.d("Loan Tap", "Response " + response.isSuccessful());
+                closeProgress();
+                if (response.body().getUploadDocument1()!=null) {
+                        Toast.makeText(getActivity(),"Document uploaded successfully", Toast.LENGTH_LONG).show();
+                } else {
+                    Log.e("Loan tap upload issue", "Error received" + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<UploadDocResponse> call, Throwable t) {
+                closeProgress();
+                t.printStackTrace();
+            }
+        });
     }
 
 
@@ -1158,10 +1331,9 @@ public class DocumentUploadFragment extends Fragment {
             if (data != null) {
                 try {
                     fileUri = data.getData();
-                    filePath = FileUtils.getRealPath(context, fileUri);
-                    file = new File(filePath);
-                    String fileType = context.getContentResolver().getType(fileUri);
-                    int size = Integer.parseInt(String.valueOf(file.length() / 1024));
+                    fileType = context.getContentResolver().getType(fileUri);
+                    filePath = createCopyAndReturnRealPath(context,fileUri);
+                    Log.e("PATH",""+filePath);
                     if (size > 5000) {
                         tvUploadDocMsg.setText(getString(R.string.file_size_error));
                     } else if (!(fileType.contains("pdf") || fileType.contains("png") || fileType.contains("jpg") || fileType.contains("jpeg"))) {
@@ -1169,7 +1341,7 @@ public class DocumentUploadFragment extends Fragment {
                     } else {
                         btnSelectFileTOUpload.setVisibility(View.GONE);
                         btnUploadFile.setVisibility(View.VISIBLE);
-                        tvUploadDocMsg.setText(file.getPath());
+                        tvUploadDocMsg.setText(filePath);
 
                     }
                     if (fileType.contains("pdf")) {

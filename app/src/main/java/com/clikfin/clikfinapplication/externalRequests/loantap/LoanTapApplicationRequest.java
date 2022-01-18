@@ -1,4 +1,4 @@
-package com.clikfin.clikfinapplication.loantap;
+package com.clikfin.clikfinapplication.externalRequests.loantap;
 
 import com.google.gson.annotations.SerializedName;
 
