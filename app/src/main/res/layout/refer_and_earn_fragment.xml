@@ -2,10 +2,11 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:gravity="center"
     android:orientation="vertical">
 
-    <ImageView
+    <!--<ImageView
         android:id="@+id/img_cibil"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -17,6 +18,41 @@
         android:text="Upcoming"
         android:gravity="center"
         android:textColor="@color/splash_color"
-        android:padding="@dimen/input_field_padding"/>
+        android:padding="@dimen/input_field_padding"/>-->
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/topLayout"
+        android:layout_centerVertical="true"
+        app:cardCornerRadius="20dp">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <ImageView
+                android:id="@+id/img_cibil"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="80dp"
+                android:layout_centerInParent="true"
+                android:layout_centerHorizontal="true"
+                android:src="@drawable/ic_upcoming" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/img_cibil"
+                android:gravity="center"
+                android:padding="@dimen/input_field_padding"
+                android:text="Upcoming"
+                android:textColor="@color/splash_color"
+                android:textSize="@dimen/medium_text"
+                android:textStyle="bold" />
+        </RelativeLayout>
+
+    </androidx.cardview.widget.CardView>
+
 
 </LinearLayout>

@@ -2,11 +2,13 @@ package com.clikfin.clikfinapplication.fragment;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -30,11 +32,12 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import static android.view.View.VISIBLE;
 import static com.clikfin.clikfinapplication.fragment.EmploymentFragment.upwardsAuthToken;
 import static com.clikfin.clikfinapplication.fragment.EmploymentFragment.upwardsUserID;
 
 public class LoanApplicationStatusFragment extends Fragment {
-    TextView tvLoanApplicationStatusDescription, tvLoanStatusHeader;
+    TextView tvLoanApplicationStatusDescription, tvLoanStatusHeader,underReviewTv,loanApprvd;
     ImageView imgApplicationStatus;
     private FragmentManager fragmentManager;
     private FragmentTransaction fragmentTransaction;
@@ -43,6 +46,7 @@ public class LoanApplicationStatusFragment extends Fragment {
     String userName;
     private SharedPreferences sharedPreferences;
     UpwardLoanResponse response;
+    LinearLayout resultLayout;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -64,7 +68,10 @@ public class LoanApplicationStatusFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_loan_application_status, container, false);
         tvLoanApplicationStatusDescription = view.findViewById(R.id.tvLoanApplicationStatusDescription);
         tvLoanStatusHeader = view.findViewById(R.id.tvLoanStatusHeader);
+        loanApprvd = view.findViewById(R.id.loanApprvd);
         imgApplicationStatus = view.findViewById(R.id.imgApplicationStatus);
+        resultLayout = view.findViewById(R.id.resultLayout);
+        underReviewTv = view.findViewById(R.id.underReviewTv);
         ((DashboardActivity) context).setNavigationTitle(getString(R.string.loan_application_status));
         sharedPreferences = getContext().getSharedPreferences(getString(R.string.shared_preferences), Context.MODE_PRIVATE);
         String upwardResponse = sharedPreferences.getString(getString(R.string.upwardResponse), "");
@@ -72,7 +79,7 @@ public class LoanApplicationStatusFragment extends Fragment {
 //        if (sharedPreferences.getString(getString(R.string.loan_source), "").equals(getString(R.string.upward))) {
 //            checkLoanStatus(createApplicationStatusRequest());
 //        }else{
-            fragmentNavigation();
+        fragmentNavigation();
 //        }
         return view;
     }
@@ -81,33 +88,35 @@ public class LoanApplicationStatusFragment extends Fragment {
         SharedPreferences sharedPreferences = context.getSharedPreferences(getString(R.string.shared_preferences), Context.MODE_PRIVATE);
         String loanApplicationStatus = sharedPreferences.getString(getString(R.string.loan_application_status), "");
         userName = sharedPreferences.getString(getString(R.string.user_name), "");
-
         if (loanApplicationStatus.equalsIgnoreCase(getString(R.string.under_review))) {
-            tvLoanStatusHeader.setText(getString(R.string.congratulations));
+            tvLoanStatusHeader.setText(R.string.loan_under_review);
             tvLoanApplicationStatusDescription.setText("Hi " + userName);
+            underReviewTv.setVisibility(VISIBLE);
             tvLoanApplicationStatusDescription.setText(" " + tvLoanApplicationStatusDescription.getText().toString() + " " + getString(R.string.under_review_msg));
-            imgApplicationStatus.setImageResource(R.drawable.ic_ok);
+            imgApplicationStatus.setImageResource(R.drawable.ic_under_review);
         } else if (loanApplicationStatus.equalsIgnoreCase(getString(R.string.rejected))) {
-            tvLoanStatusHeader.setText(getString(R.string.thank_you));
+            tvLoanStatusHeader.setText("Rejected");
+            tvLoanStatusHeader.setTextColor(Color.RED);
 //            tvLoanApplicationStatusDescription.setText("Hi "+userName);
             tvLoanApplicationStatusDescription.setText("Sorry " + tvLoanApplicationStatusDescription.getText().toString() + " " + getString(R.string.rejected_msg));
-            imgApplicationStatus.setImageResource(R.drawable.application_rejected);
-            tvLoanApplicationStatusDescription.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
+            imgApplicationStatus.setImageResource(R.drawable.ic_group_3698);
+            tvLoanApplicationStatusDescription.setTextColor(getResources().getColor(R.color.darkBlueBg));
         } else if (loanApplicationStatus.equalsIgnoreCase(getString(R.string.disbursement_pending))) {
             tvLoanStatusHeader.setText(getString(R.string.congratulations));
             tvLoanApplicationStatusDescription.setText("Hi " + userName);
             tvLoanApplicationStatusDescription.setText(" " + tvLoanApplicationStatusDescription.getText().toString() + " " + getString(R.string.disbursed_pending_msg));
-            imgApplicationStatus.setImageResource(R.drawable.ic_ok);
+            imgApplicationStatus.setImageResource(R.drawable.ic_tick_icon);
         } else if (loanApplicationStatus.equalsIgnoreCase(getString(R.string.disbursed))) {
-            tvLoanStatusHeader.setText(getString(R.string.congratulations));
+            tvLoanStatusHeader.setText(getString(R.string.money_disbursed));
             tvLoanApplicationStatusDescription.setText("Hi " + userName);
-            imgApplicationStatus.setImageResource(R.drawable.ic_ok);
+            imgApplicationStatus.setImageResource(R.drawable.ic_tick_icon);
             tvLoanApplicationStatusDescription.setText(" " + tvLoanApplicationStatusDescription.getText().toString() + " " + getString(R.string.disbursed_msg));
         } else if (loanApplicationStatus.equalsIgnoreCase(getString(R.string.approved))) {
             tvLoanStatusHeader.setText(getString(R.string.congratulations));
+            loanApprvd.setVisibility(VISIBLE);
             tvLoanApplicationStatusDescription.setText("Hi " + userName);
-            imgApplicationStatus.setImageResource(R.drawable.ic_ok);
-            tvLoanApplicationStatusDescription.setText(" " + tvLoanApplicationStatusDescription.getText().toString() + " " + getString(R.string.approved_msg));
+            imgApplicationStatus.setImageResource(R.drawable.ic_tick_icon);
+            tvLoanApplicationStatusDescription.setText(" " + tvLoanApplicationStatusDescription.getText().toString() + " " + getString(R.string.loan_approved));
         }
     }
     /**

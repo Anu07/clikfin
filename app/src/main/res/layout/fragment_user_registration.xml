@@ -6,33 +6,41 @@
     android:orientation="vertical">
 
     <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/register_image"
+        android:layout_toLeftOf="@+id/register_image"
+        android:src="@drawable/applogo" />
+
+
+    <ImageView
         android:id="@+id/register_image"
         android:layout_width="150dp"
-        android:layout_height="150dp"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="@dimen/general_padding_margin"
-        android:background="@drawable/ic_signup"
+        android:layout_height="180dp"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="?actionBarSize"
+        android:layout_marginRight="40dp"
+        android:background="@drawable/group_481"
         android:contentDescription="TODO"
         android:scaleType="centerCrop" />
 
     <LinearLayout
         android:id="@+id/register_container"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/register_image"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="@dimen/general_padding_margin"
-        android:background="@drawable/border"
-        android:elevation="@dimen/elevation">
+        android:elevation="@dimen/elevation"
+        android:gravity="center_horizontal">
 
         <LinearLayout
-            android:layout_width="310dp"
+            android:layout_width="400dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:gravity="center"
             android:orientation="vertical"
-            android:paddingTop="@dimen/general_padding_margin"
-            android:paddingBottom="@dimen/general_padding_margin">
+            android:paddingTop="@dimen/input_field_margin"
+            android:paddingBottom="@dimen/input_field_margin">
 
             <EditText
                 android:id="@+id/name"
@@ -41,14 +49,16 @@
                 android:layout_marginLeft="@dimen/general_padding_margin"
                 android:layout_marginRight="@dimen/general_padding_margin"
                 android:autofillHints="@string/full_name"
-                android:background="@drawable/border_dark_blue"
+                android:drawableLeft="@drawable/ic_baseline_account_circle_24"
                 android:focusable="true"
                 android:hint="@string/full_name"
                 android:imeOptions="actionNext"
+                android:backgroundTint="@color/text_color"
                 android:inputType="text"
                 android:padding="@dimen/input_field_padding"
                 android:singleLine="true"
                 android:textColor="@color/input_color"
+                android:textColorHint="@color/text_color"
                 android:textSize="@dimen/small_text" />
 
             <TextView
@@ -67,7 +77,8 @@
                 android:layout_marginLeft="@dimen/general_padding_margin"
                 android:layout_marginRight="@dimen/general_padding_margin"
                 android:autofillHints="@string/contact_number"
-                android:background="@drawable/border_dark_blue"
+                android:backgroundTint="@color/text_color"
+                android:drawableLeft="@drawable/ic_baseline_local_phone_24"
                 android:focusable="true"
                 android:hint="@string/contact_number"
                 android:imeOptions="actionNext"
@@ -76,6 +87,7 @@
                 android:padding="@dimen/input_field_padding"
                 android:singleLine="true"
                 android:textColor="@color/input_color"
+                android:textColorHint="@color/text_color"
                 android:textSize="@dimen/small_text" />
 
             <TextView
@@ -94,14 +106,16 @@
                 android:layout_marginLeft="@dimen/general_padding_margin"
                 android:layout_marginRight="@dimen/general_padding_margin"
                 android:autofillHints="@string/email_id"
-                android:background="@drawable/border_dark_blue"
+                android:drawableLeft="@drawable/ic_baseline_mail_outline_24"
                 android:focusable="true"
+                android:backgroundTint="@color/text_color"
                 android:hint="@string/email_id"
                 android:imeOptions="actionNext"
                 android:inputType="textEmailAddress"
                 android:padding="@dimen/input_field_padding"
                 android:singleLine="true"
                 android:textColor="@color/input_color"
+                android:textColorHint="@color/text_color"
                 android:textSize="@dimen/small_text" />
 
             <TextView
@@ -119,15 +133,17 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="@dimen/general_padding_margin"
                 android:layout_marginRight="@dimen/general_padding_margin"
-                android:background="@drawable/border_dark_blue"
+                android:drawableLeft="@drawable/ic_baseline_lock_24"
                 android:focusable="true"
                 android:hint="@string/password"
+                android:backgroundTint="@color/text_color"
                 android:imeOptions="actionNext"
                 android:importantForAutofill="no"
                 android:inputType="textPassword"
                 android:padding="@dimen/input_field_padding"
                 android:singleLine="true"
                 android:textColor="@color/input_color"
+                android:textColorHint="@color/text_color"
                 android:textSize="@dimen/small_text" />
 
             <TextView
@@ -145,14 +161,16 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="@dimen/general_padding_margin"
                 android:layout_marginRight="@dimen/general_padding_margin"
-                android:background="@drawable/border_dark_blue"
+                android:drawableLeft="@drawable/ic_baseline_lock_24"
                 android:focusable="true"
                 android:hint="@string/re_enter_password"
                 android:imeOptions="actionDone"
+                android:backgroundTint="@color/text_color"
                 android:importantForAutofill="no"
                 android:inputType="textPassword"
                 android:padding="@dimen/input_field_padding"
                 android:textColor="@color/input_color"
+                android:textColorHint="@color/text_color"
                 android:textSize="@dimen/small_text" />
 
             <TextView
@@ -172,14 +190,15 @@
     <Button
         android:id="@+id/submitButton"
         style="?android:attr/borderlessButtonStyle"
-        android:layout_width="wrap_content"
+        android:layout_width="250dp"
         android:layout_height="wrap_content"
         android:layout_below="@id/register_container"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="@dimen/general_padding_margin"
-        android:background="@drawable/round_button"
+        android:background="@drawable/less_round_button"
         android:text="@string/register"
         android:textAllCaps="false"
+        android:textStyle="bold"
         android:textColor="@color/white"
         android:textSize="@dimen/small_text" />
 

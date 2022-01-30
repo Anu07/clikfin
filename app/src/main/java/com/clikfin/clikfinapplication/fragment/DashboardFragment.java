@@ -12,6 +12,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -44,7 +45,8 @@ import retrofit2.Response;
 @SuppressWarnings("ALL")
 public class DashboardFragment extends Fragment {
     private static final int PICK_PDF_FILE = 111;
-    Button btnApplyLoan, btnCibilCheck, btnReferAndEarn;
+    private static final String TAG = DashboardFragment.class.getName();
+    Button btnApplyLoan, btnCibilCheck, btnReferAndEarn, btnEmi;
     private FragmentManager fragmentManager;
     private FragmentTransaction fragmentTransaction;
     private Fragment fragment = null;
@@ -54,6 +56,7 @@ public class DashboardFragment extends Fragment {
     static Timer timer;
     private String filePath = "";
 
+    TextView userName;
     static TimerTask timerTask;
     FragmentActivity activity;
     Context context;
@@ -61,6 +64,7 @@ public class DashboardFragment extends Fragment {
     PagerAdapter mAdapter;
     final ArrayList<OnBoardItem> onBoardItems = new ArrayList<>();
     LinearLayout SliderDots;
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -84,13 +88,14 @@ public class DashboardFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_dashboard1, container, false);
         btnApplyLoan = view.findViewById(R.id.btn_apply_now);
         btnCibilCheck = view.findViewById(R.id.btn_check_now);
+        userName = view.findViewById(R.id.userName);
         btnReferAndEarn = view.findViewById(R.id.btn_refer_and_earn);
+        btnEmi = view.findViewById(R.id.emi_calc_bttn);
         viewPager = view.findViewById(R.id.scrollingViewpager);
         bottomNavigationView = view.findViewById(R.id.bottom_navigation);
-
-
         loadData();
 
+        Log.e(TAG,"Attached"+isAttachedToActivity());
         mAdapter = new dashboard_viewPager(context, onBoardItems);
         viewPager.setAdapter(mAdapter);
 
@@ -99,8 +104,16 @@ public class DashboardFragment extends Fragment {
 
         SharedPreferences sharedPreferences = context.getSharedPreferences(getString(R.string.shared_preferences), Context.MODE_PRIVATE);
         String loanApplicationId = sharedPreferences.getString(getString(R.string.loan_application_id), "");
-//        sharedPreferences.edit().putString(getString(R.string.loan_source), getString(R.string.loantap)).apply();
+//        sharedPreferences.edit().putString(getString(R.string.loan_source), getString(R.string.upward)).apply();
+        btnEmi.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (Common.isNetworkConnected(context)) {
+                    replaceFragment(new EligibleCheckFragment());
+                }
 
+            }
+        });
 
         btnApplyLoan.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -141,7 +154,6 @@ public class DashboardFragment extends Fragment {
         return view;
     }
 
-    //todo
     private void fragmentNavigation() {
         SharedPreferences sharedPreferences = context.getSharedPreferences(getString(R.string.shared_preferences), Context.MODE_PRIVATE);
         String loanApplicationStatus = sharedPreferences.getString(getString(R.string.loan_application_status), "");
@@ -217,10 +229,11 @@ public class DashboardFragment extends Fragment {
     }
 
     public void loadData() {
-
         int[] header = {R.string.scrolling_header_1, R.string.scrolling_header_2};
         int[] desc = {R.string.scrolling_disc_1, R.string.scrolling_disc_2};
-        int[] imageId = {R.drawable.scrolling_img1, R.drawable.scrolling_img2};
+        int[] imageId = {R.drawable.scrolling_img1, R.drawable.image_1};
+        SharedPreferences sharedPreferences = getActivity().getSharedPreferences(getString(R.string.shared_preferences), Context.MODE_PRIVATE);
+        userName.setText("Hello! "+sharedPreferences.getString(getString(R.string.user_name), ""));
 
 
         for (int i = 0; i < imageId.length; i++) {
@@ -331,5 +344,9 @@ public class DashboardFragment extends Fragment {
                 // Perform operations on the document using its URI.
             }
         }*/
+    }
+    public boolean isAttachedToActivity() {
+        boolean attached = isVisible() && getActivity() != null;
+        return attached;
     }
 }

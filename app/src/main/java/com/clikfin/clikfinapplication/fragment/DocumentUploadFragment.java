@@ -1,6 +1,13 @@
 package com.clikfin.clikfinapplication.fragment;
 
 
+import static android.app.Activity.RESULT_OK;
+import static com.clikfin.clikfinapplication.constants.Constants.CAMERA_REQUEST_CODE;
+import static com.clikfin.clikfinapplication.fragment.EmploymentFragment.upwardsAuthToken;
+import static com.clikfin.clikfinapplication.fragment.EmploymentFragment.upwardsUserID;
+import static com.clikfin.clikfinapplication.network.APIClient.LOANTAPPARTNERID;
+import static com.clikfin.clikfinapplication.network.APIClient.LOANTAPPRODUCTID;
+
 import android.Manifest;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -54,6 +61,7 @@ import com.clikfin.clikfinapplication.externalRequests.Response.UploadDocumentEr
 import com.clikfin.clikfinapplication.externalRequests.Response.UploadDocumentResponse;
 import com.clikfin.clikfinapplication.externalRequests.Response.loantapResponse.EnquireResponse.Documents;
 import com.clikfin.clikfinapplication.externalRequests.Response.loantapResponse.EnquireResponse.EnquireResponse;
+import com.clikfin.clikfinapplication.externalRequests.Response.loantapResponse.addApplication.proofLoanTap.ProofJsonItem;
 import com.clikfin.clikfinapplication.externalRequests.Response.loantapResponse.upload.UploadDocResponse;
 import com.clikfin.clikfinapplication.externalRequests.Response.upward.UpwardLoanResponse;
 import com.clikfin.clikfinapplication.externalRequests.Response.upward.docUpload.DocumentURLGenerationResponse;
@@ -66,11 +74,9 @@ import com.clikfin.clikfinapplication.externalRequests.loantap.enquireRequest.Do
 import com.clikfin.clikfinapplication.externalRequests.loantap.enquireRequest.EnquireRequest;
 import com.clikfin.clikfinapplication.network.APICallbackInterface;
 import com.clikfin.clikfinapplication.network.APIClient;
-import com.clikfin.clikfinapplication.util.AESUtil;
 import com.clikfin.clikfinapplication.util.AppFileUtils;
 import com.clikfin.clikfinapplication.util.BaaSEncryptDecrypt;
 import com.clikfin.clikfinapplication.util.Common;
-import com.clikfin.clikfinapplication.util.EncryptUtils;
 import com.google.gson.Gson;
 
 import java.io.ByteArrayOutputStream;
@@ -92,6 +98,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -102,17 +109,392 @@ import retrofit2.Callback;
 import retrofit2.Converter;
 import retrofit2.Response;
 
-import static com.clikfin.clikfinapplication.fragment.EmploymentFragment.upwardsAuthToken;
-import static com.clikfin.clikfinapplication.fragment.EmploymentFragment.upwardsUserID;
-import static com.clikfin.clikfinapplication.network.APIClient.LOANTAPPARTNERID;
-import static com.clikfin.clikfinapplication.network.APIClient.LOANTAPPRODUCTID;
-import static com.clikfin.clikfinapplication.network.APIClient.LOANTAP_APIKEY;
-
 public class DocumentUploadFragment extends Fragment {
     private static final String TAG = "LoanTapDocUploadFrag";
     private static int size=0;
     LinearLayout layBankStatements;
     Button btnUploadDocDone;
+    String proofJson="[{\n" +
+            "\t\t\"label\": \"Address Proof\",\n" +
+            "\t\t\"value\": \"address_proof\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Current Address Proof\",\n" +
+            "\t\t\"value\": \"current_address_proof\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Aadhaar Card\",\n" +
+            "\t\t\"value\": \"aadhaar_card\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Additional Aadhaar Card Page\",\n" +
+            "\t\t\"value\": \"aadhaar_card-xxxx\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Bank Statement Month 1\",\n" +
+            "\t\t\"value\": \"bank_statement-month-1\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Bank Statement Month 2\",\n" +
+            "\t\t\"value\": \"bank_statement-month-2\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Bank Statement Month 3\",\n" +
+            "\t\t\"value\": \"bank_statement-month-3\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Bank Statement Month 4\",\n" +
+            "\t\t\"value\": \"bank_statement-month-4\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Bank Statement Month 5\",\n" +
+            "\t\t\"value\": \"bank_statement-month-5\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Bank Statement Month 6\",\n" +
+            "\t\t\"value\": \"bank_statement-month-6\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Bank Statement Combined\",\n" +
+            "\t\t\"value\": \"bank_statement-combined\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Bank Verification Statement\",\n" +
+            "\t\t\"value\": \"bank_verification_statement\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"paytmWallet Statement\",\n" +
+            "\t\t\"value\": \"paytmwallet_statement\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Additional paytmWallet Statement\",\n" +
+            "\t\t\"value\": \"paytmwallet_statement-xxxx\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Credit Card Statement\",\n" +
+            "\t\t\"value\": \"credit_card_statement\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Cibil Report\",\n" +
+            "\t\t\"value\": \"cibil_report\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Additional Cibil Report\",\n" +
+            "\t\t\"value\": \"cibil_report-xxxx\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"CRIF Report\",\n" +
+            "\t\t\"value\": \"crif_report\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"CRIF Verification\",\n" +
+            "\t\t\"value\": \"crif_verification\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Cheque Full Amount\",\n" +
+            "\t\t\"value\": \"cheque-full_amount\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Cheque EMI\",\n" +
+            "\t\t\"value\": \"cheque-emi\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Cheque Cancelled\",\n" +
+            "\t\t\"value\": \"cheque-cancelled\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"CAM\",\n" +
+            "\t\t\"value\": \"cam\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Customer Photo\",\n" +
+            "\t\t\"value\": \"customer_photo\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Driving License\",\n" +
+            "\t\t\"value\": \"driving_licence\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Electricity Bill\",\n" +
+            "\t\t\"value\": \"electricity_bill\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"FAM\",\n" +
+            "\t\t\"value\": \"fam\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Additional FAM\",\n" +
+            "\t\t\"value\": \"fam-xxxx\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Form 16\",\n" +
+            "\t\t\"value\": \"form_16\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Additional Form 16 Pages\",\n" +
+            "\t\t\"value\": \"form_16-xxxx\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Govt. Allotment Letter\",\n" +
+            "\t\t\"value\": \"govt_allotment_letter\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Gas Receipt\",\n" +
+            "\t\t\"value\": \"gas_receipt\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Gas Book\",\n" +
+            "\t\t\"value\": \"gas_book\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Loan Agreement\",\n" +
+            "\t\t\"value\": \"loan_agreement\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Loan Agreement Copy\",\n" +
+            "\t\t\"value\": \"loan_agreement_copy\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Agreement eSigned\",\n" +
+            "\t\t\"value\": \"agreement_esigned\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Nach Mandate\",\n" +
+            "\t\t\"value\": \"nach_mandate\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Office FI Report\",\n" +
+            "\t\t\"value\": \"office_fi_report\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"OSV ID Proof\",\n" +
+            "\t\t\"value\": \"osv_id_proof\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"OSV Address Proof\",\n" +
+            "\t\t\"value\": \"osv_address_proof\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Residence FI Photo 1\",\n" +
+            "\t\t\"value\": \"residence_fi_photo_1\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Residence FI Photo 2\",\n" +
+            "\t\t\"value\": \"residence_fi_photo_2\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Residence FI Photo 3\",\n" +
+            "\t\t\"value\": \"residence_fi_photo_3\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Residence FI Photo 4\",\n" +
+            "\t\t\"value\": \"residence_fi_photo_4\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Residence FI Photo 5\",\n" +
+            "\t\t\"value\": \"residence_fi_photo_5\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Office FI Photo 1\",\n" +
+            "\t\t\"value\": \"office_fi_photo_1\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Office FI Photo 2\",\n" +
+            "\t\t\"value\": \"office_fi_photo_2\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Office FI Photo 3\",\n" +
+            "\t\t\"value\": \"office_fi_photo_3\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Office FI Photo 4\",\n" +
+            "\t\t\"value\": \"office_fi_photo_4\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Office FI Photo 5\",\n" +
+            "\t\t\"value\": \"office_fi_photo_5\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Pan Card\",\n" +
+            "\t\t\"value\": \"pan_card\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Passport\",\n" +
+            "\t\t\"value\": \"passport\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Additional Passport Page\",\n" +
+            "\t\t\"value\": \"passport-xxxx\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Permanent address FI Report\",\n" +
+            "\t\t\"value\": \"permanent_address_fi_report\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Photo\",\n" +
+            "\t\t\"value\": \"photo\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Additional Photo\",\n" +
+            "\t\t\"value\": \"photo-xxxx\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Rent Agreement\",\n" +
+            "\t\t\"value\": \"rent_agreement\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Additional Rent Agreement pages\",\n" +
+            "\t\t\"value\": \"rent_agreement-xxxx\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Residence FI Report\",\n" +
+            "\t\t\"value\": \"residence_fi_report\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Salary Slip Month 1\",\n" +
+            "\t\t\"value\": \"salary_slip-month-1\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Salary Slip Month 2\",\n" +
+            "\t\t\"value\": \"salary_slip-month-2\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Salary Slip Month 3\",\n" +
+            "\t\t\"value\": \"salary_slip-month-3\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Salary Slip Combined\",\n" +
+            "\t\t\"value\": \"salary_slip-combined\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Sale Deed\",\n" +
+            "\t\t\"value\": \"sale_deed\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Telephone Bill\",\n" +
+            "\t\t\"value\": \"telephone_bill\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Voter ID\",\n" +
+            "\t\t\"value\": \"voter_id\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Voter ID Back\",\n" +
+            "\t\t\"value\": \"voter_id_back\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"FI Report Received\",\n" +
+            "\t\t\"value\": \"fi_report_received\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Nach Received\",\n" +
+            "\t\t\"value\": \"nach_received\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Agreement Received\",\n" +
+            "\t\t\"value\": \"agreement_received\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"GST Returns Month 1\",\n" +
+            "\t\t\"value\": \"gst_returns-month-1\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"GST Returns Month 2\",\n" +
+            "\t\t\"value\": \"gst_returns-month-2\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"GST Returns Month 3\",\n" +
+            "\t\t\"value\": \"gst_returns-month-3\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"GST Returns Month 4\",\n" +
+            "\t\t\"value\": \"gst_returns-month-4\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"GST Returns Month 5\",\n" +
+            "\t\t\"value\": \"gst_returns-month-5\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"GST Returns Month 6\",\n" +
+            "\t\t\"value\": \"gst_returns-month-6\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"GST Returns Combined\",\n" +
+            "\t\t\"value\": \"gst_returns-combined\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"GST Certificate\",\n" +
+            "\t\t\"value\": \"gst_certificate\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"RC Book\",\n" +
+            "\t\t\"value\": \"rc_book\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Bike Insurance Copy\",\n" +
+            "\t\t\"value\": \"bike_insurance_copy\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Invoice Copy\",\n" +
+            "\t\t\"value\": \"invoice_copy\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Shop Act\",\n" +
+            "\t\t\"value\": \"shop_act\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Latest ITR\",\n" +
+            "\t\t\"value\": \"itr\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Additional ITR\",\n" +
+            "\t\t\"value\": \"itr-xxxx\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"House Owners Sanction Letter\",\n" +
+            "\t\t\"value\": \"house_owners_sanction_letter\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Booking Receipt\",\n" +
+            "\t\t\"value\": \"booking_receipt\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Other\",\n" +
+            "\t\t\"value\": \"other\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Udyog Aadhaar Certificate\",\n" +
+            "\t\t\"value\": \"udyog_uaadhaar_certificate\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Shop Photo 1\",\n" +
+            "\t\t\"value\": \"shop_photo_1\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Shop Photo 2\",\n" +
+            "\t\t\"value\": \"shop_photo_2\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Shop Photo 3\",\n" +
+            "\t\t\"value\": \"shop_photo_3\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Shop Photo 4\",\n" +
+            "\t\t\"value\": \"shop_photo_4\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"VCIP Report\",\n" +
+            "\t\t\"value\": \"vcip_report\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"Restructure Request Letter\",\n" +
+            "\t\t\"value\": \"restructure_request_letter\"\n" +
+            "\t},\n" +
+            "\t{\n" +
+            "\t\t\"label\": \"CARD KYC File (pdf format)\",\n" +
+            "\t\t\"value\": \"card_kyc_file\"\n" +
+            "\t}\n" +
+            "]";
     TextView tvPanUpload, tvAadharUpload, tvResidencyProofUpload, tvBankStatementUpload, tvPaySlip, tvPhotoUpload, tvCompanyIDUpload;
     final int PERMISSION_REQUES_CODE = 101;
     TextView tvIsPanMandatory, tvIsAadharFrontMandatory, tvIsAadharBackMandatory, tvIsResidencyProofMandatory, tvIs1MonthsBankStateMandatory, tvIs2MonthsBankStateMandatory, tvIs3MonthsBankStateMandatory, tvIs1MonthPaySlipMandatory, tvIs2MonthPaySlipMandatory, tvIs3MonthPaySlipMandatory, tvIsPhotoUploadMandatory, tvIsCompanyIDUploadMandatory;
@@ -214,7 +596,9 @@ public class DocumentUploadFragment extends Fragment {
                 getDocumentUploadedReport();
             try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                   getLoanTapDocumentUploadedReport();
+                    if(sharedPreferences.getString("LOANTAPAPPID", "")!=null){
+                        getLoanTapDocumentUploadedReport();
+                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -231,7 +615,7 @@ public class DocumentUploadFragment extends Fragment {
         if (Common.isNetworkConnected(context)) {
             getUploadDocument();
         } else {
-            Toast.makeText(context, getString(R.string.internet_connectivity_issue), Toast.LENGTH_LONG).show();
+            Toast.makeText(context, getString(R.string.internet_connectivity_issue), Toast.LENGTH_SHORT).show();
         }
 
         checkAndRequestPermissions();
@@ -369,7 +753,7 @@ public class DocumentUploadFragment extends Fragment {
                     if (checkAllMandatoryDocUploaded()) {
                         postAllDocumentUploadStatus();
                     } else {
-                        Toast.makeText(context, getString(R.string.upload_doc_msg), Toast.LENGTH_LONG).show();
+                        Toast.makeText(context, getString(R.string.upload_doc_msg), Toast.LENGTH_SHORT).show();
                     }
                 }
             }
@@ -381,14 +765,14 @@ public class DocumentUploadFragment extends Fragment {
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void getLoanTapDocumentUploadedReport() {
-        String url = APIClient.BASE_DEV_LOANTAP_URL + "enquire";
+        String url = APIClient.BASE_LOANTAP_URL + "enquire";
         Call<EnquireResponse> call = APIClient.getClient(APIClient.type.JSON)
                 .enquireLoanTapDocuments(url, BaaSEncryptDecrypt.encrypt(String.valueOf(System.currentTimeMillis()/1000L)), LOANTAPPRODUCTID, LOANTAPPARTNERID, createEnquireRequest());
         call.enqueue(new Callback<EnquireResponse>() {
             @Override
             public void onResponse(Call<EnquireResponse> call, Response<EnquireResponse> response) {
                 EnquireResponse enquireResponse = response.body();
-                if(enquireResponse.getDocumentsStatus()!=null){
+                if(enquireResponse.getDocumentsStatus()!=null && enquireResponse.getDocumentsStatus().getAnswer()!=null){
                     Documents docsKycResponse = enquireResponse.getDocumentsStatus().getAnswer().getDocuments();
                     if (docsKycResponse.getKyc().getIsCompleted().equals("no")) {
                         if (docsKycResponse.getKyc().getAddressProof().getIsUploaded().equals("no")) {
@@ -449,7 +833,7 @@ public class DocumentUploadFragment extends Fragment {
             public void onFailure(Call<Void> call, Throwable t) {
                 super.onFailure(call, t);
                 Common.logAPIFailureToCrashlyatics(t);
-                Toast.makeText(context, "" + getString(R.string.server_error), Toast.LENGTH_LONG).show();
+                Toast.makeText(context, "" + getString(R.string.server_error), Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -533,7 +917,7 @@ public class DocumentUploadFragment extends Fragment {
                         //permission is denied (and never ask again is  checked)
                         //shouldShowRequestPermissionRationale will return false
                         else {
-                            Toast.makeText(context, "Go to settings and enable permissions", Toast.LENGTH_LONG)
+                            Toast.makeText(context, "Go to settings and enable permissions", Toast.LENGTH_SHORT)
                                     .show();
                             //                            //proceed with logic by disabling the related features or quit the app.
                         }
@@ -596,7 +980,7 @@ public class DocumentUploadFragment extends Fragment {
         if (!mediaStorageDir.exists()) {
             if (!mediaStorageDir.mkdirs()) {
                 Toast.makeText(context, "Oops! Failed create "
-                        + "ClikFin" + " directory", Toast.LENGTH_LONG).show();
+                        + "ClikFin" + " directory", Toast.LENGTH_SHORT).show();
                 return null;
             }
         }
@@ -759,7 +1143,7 @@ public class DocumentUploadFragment extends Fragment {
                 if (response.code() == 200 && response.body().getData().getErrorMessage().isEmpty()) {
                     uploadDocument(response.body());
                 } else {
-                    Toast.makeText(getActivity(), "Some error occurred", Toast.LENGTH_LONG).show();
+                        Log.e(TAG,"url generation failed upwards");
                 }
             }
 
@@ -792,11 +1176,11 @@ public class DocumentUploadFragment extends Fragment {
             public void onResponse(Call<Void> call, Response<Void> response) {
                 if (response.code() == 200) {
                     dialog.dismiss();
-                    Toast.makeText(getActivity(), "Document Uploaded Successfully", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getActivity(), "Document Uploaded Successfully", Toast.LENGTH_SHORT).show();
                     updateDocumentUploadStatus();
                 } else {
                     closeProgress();
-                    Toast.makeText(getActivity(), "Please try again later", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getActivity(), "Please try again later", Toast.LENGTH_SHORT).show();
                 }
             }
 
@@ -823,11 +1207,10 @@ public class DocumentUploadFragment extends Fragment {
                     closeProgress();
                     dialog.dismiss();
                     updatePreferencesForDocuments();
-                    callClikFinDocCall();
 //                    setIsDocumentUploadedImg();
                 } else {
                     closeProgress();
-                    Toast.makeText(getActivity(), "Please try again later", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getActivity(), "Please try again later", Toast.LENGTH_SHORT).show();
                 }
             }
 
@@ -973,7 +1356,7 @@ public class DocumentUploadFragment extends Fragment {
                     case 403:
                     case 401:
                         dialog.dismiss();
-                        Toast.makeText(context, getString(R.string.logged_out), Toast.LENGTH_LONG).show();
+                        Toast.makeText(context, getString(R.string.logged_out), Toast.LENGTH_SHORT).show();
                         FragmentManager fragmentManager = activity.getSupportFragmentManager();
                         final FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
                         fragmentManager.popBackStack();
@@ -986,7 +1369,7 @@ public class DocumentUploadFragment extends Fragment {
                         if (response.errorBody() != null) {
                             Converter<ResponseBody, UploadDocumentErrorResponse> PersonalDetailsConverter = APIClient.getRetrofit().responseBodyConverter(UploadDocumentErrorResponse.class, new Annotation[0]);
                             try {
-                                Toast.makeText(context, PersonalDetailsConverter.convert(response.errorBody()).getError(), Toast.LENGTH_LONG).show();
+                                Toast.makeText(context, PersonalDetailsConverter.convert(response.errorBody()).getError(), Toast.LENGTH_SHORT).show();
                             } catch (Exception e) {
                                 Common.logExceptionToCrashlaytics(e);
                             }
@@ -994,7 +1377,7 @@ public class DocumentUploadFragment extends Fragment {
                         break;
                     case 409:
                         dialog.dismiss();
-                        Toast.makeText(context, uploadDocName + " already uploaded", Toast.LENGTH_LONG).show();
+                        Toast.makeText(context, uploadDocName + " already uploaded", Toast.LENGTH_SHORT).show();
                         if (uploadDocType.equalsIgnoreCase(getString(R.string.doc_current_residency_proof))) {
                             imgResidencyProofUpload.setImageResource(R.drawable.ic_ok);
                             editor.putBoolean(getString(R.string.isUpload_current_residency_proof), true);
@@ -1046,7 +1429,7 @@ public class DocumentUploadFragment extends Fragment {
                         break;
                     case 500:
                         dialog.dismiss();
-                        Toast.makeText(context, getString(R.string.server_error), Toast.LENGTH_LONG).show();
+                        Toast.makeText(context, getString(R.string.server_error), Toast.LENGTH_SHORT).show();
                         break;
 
                 }
@@ -1056,7 +1439,7 @@ public class DocumentUploadFragment extends Fragment {
             public void onFailure(Call<UploadDocumentResponse> call, Throwable t) {
                 super.onFailure(call, t);
                 dialog.dismiss();
-                Toast.makeText(context, getString(R.string.server_error), Toast.LENGTH_LONG).show();
+                Toast.makeText(context, getString(R.string.server_error), Toast.LENGTH_SHORT).show();
                 Common.logAPIFailureToCrashlyatics(t);
 
             }
@@ -1070,99 +1453,99 @@ public class DocumentUploadFragment extends Fragment {
                 imgResidencyProofUpload.setImageResource(R.drawable.ic_ok);
 
 
-                Toast.makeText(context, getString(R.string.is_doc_upload), Toast.LENGTH_LONG).show();
+                Toast.makeText(context, getString(R.string.is_doc_upload), Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(context, getString(R.string.server_error), Toast.LENGTH_LONG).show();
+                Toast.makeText(context, getString(R.string.server_error), Toast.LENGTH_SHORT).show();
             }
         } else if (uploadDocType.equalsIgnoreCase(getString(R.string.doc_aadhar_front))) {
             if (uploadDocumentResponse.getAADHAAR_CARD_FRONT().isUploaded()) {
-                Toast.makeText(context, getString(R.string.is_doc_upload), Toast.LENGTH_LONG).show();
+                Toast.makeText(context, getString(R.string.is_doc_upload), Toast.LENGTH_SHORT).show();
                 imgAadharFrontUpload.setImageResource(R.drawable.ic_ok);
 
             } else {
-                Toast.makeText(context, getString(R.string.server_error), Toast.LENGTH_LONG).show();
+                Toast.makeText(context, getString(R.string.server_error), Toast.LENGTH_SHORT).show();
             }
         } else if (uploadDocType.equalsIgnoreCase(getString(R.string.doc_aadhar_back))) {
             if (uploadDocumentResponse.getAADHAAR_CARD_BACK().isUploaded()) {
-                Toast.makeText(context, getString(R.string.is_doc_upload), Toast.LENGTH_LONG).show();
+                Toast.makeText(context, getString(R.string.is_doc_upload), Toast.LENGTH_SHORT).show();
 
                 imgAadharBackUpload.setImageResource(R.drawable.ic_ok);
 
 
             } else {
-                Toast.makeText(context, getString(R.string.server_error), Toast.LENGTH_LONG).show();
+                Toast.makeText(context, getString(R.string.server_error), Toast.LENGTH_SHORT).show();
             }
         } else if (uploadDocType.equalsIgnoreCase(getString(R.string.doc_upload_pan_card))) {
             if (uploadDocumentResponse.getPAN_CARD().isUploaded()) {
 
                 imgPanUpload.setImageResource(R.drawable.ic_ok);
 
-                Toast.makeText(context, getString(R.string.is_doc_upload), Toast.LENGTH_LONG).show();
+                Toast.makeText(context, getString(R.string.is_doc_upload), Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(context, getString(R.string.server_error), Toast.LENGTH_LONG).show();
+                Toast.makeText(context, getString(R.string.server_error), Toast.LENGTH_SHORT).show();
             }
         } else if (uploadDocType.equalsIgnoreCase(getString(R.string.doc_bank_statement_1))) {
             if (uploadDocumentResponse.getBANK_STATEMENT_1().isUploaded()) {
 
                 img_1MonthsBankStateUpload.setImageResource(R.drawable.ic_ok);
 
-                Toast.makeText(context, getString(R.string.is_doc_upload), Toast.LENGTH_LONG).show();
+                Toast.makeText(context, getString(R.string.is_doc_upload), Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(context, getString(R.string.server_error), Toast.LENGTH_LONG).show();
+                Toast.makeText(context, getString(R.string.server_error), Toast.LENGTH_SHORT).show();
             }
         } else if (uploadDocType.equalsIgnoreCase(getString(R.string.doc_bank_statement_2))) {
             if (uploadDocumentResponse.getBANK_STATEMENT_2().isUploaded()) {
 
                 img_2MonthsBankStateUpload.setImageResource(R.drawable.ic_ok);
 
-                Toast.makeText(context, getString(R.string.is_doc_upload), Toast.LENGTH_LONG).show();
+                Toast.makeText(context, getString(R.string.is_doc_upload), Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(context, getString(R.string.server_error), Toast.LENGTH_LONG).show();
+                Toast.makeText(context, getString(R.string.server_error), Toast.LENGTH_SHORT).show();
             }
         } else if (uploadDocType.equalsIgnoreCase(getString(R.string.doc_bank_statement_3))) {
             if (uploadDocumentResponse.getBANK_STATEMENT_3().isUploaded()) {
 
                 img_3MonthsBankStateUpload.setImageResource(R.drawable.ic_ok);
 
-                Toast.makeText(context, getString(R.string.is_doc_upload), Toast.LENGTH_LONG).show();
+                Toast.makeText(context, getString(R.string.is_doc_upload), Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(context, getString(R.string.server_error), Toast.LENGTH_LONG).show();
+                Toast.makeText(context, getString(R.string.server_error), Toast.LENGTH_SHORT).show();
             }
         } else if (uploadDocType.equalsIgnoreCase(getString(R.string.doc_pay_slip_1))) {
             if (uploadDocumentResponse.getPAY_SLIP_1().isUploaded()) {
 
                 img1MonthPaySlip.setImageResource(R.drawable.ic_ok);
 
-                Toast.makeText(context, getString(R.string.is_doc_upload), Toast.LENGTH_LONG).show();
+                Toast.makeText(context, getString(R.string.is_doc_upload), Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(context, getString(R.string.server_error), Toast.LENGTH_LONG).show();
+                Toast.makeText(context, getString(R.string.server_error), Toast.LENGTH_SHORT).show();
             }
         } else if (uploadDocType.equalsIgnoreCase(getString(R.string.doc_pay_slip_2))) {
             if (uploadDocumentResponse.getPAY_SLIP_2().isUploaded()) {
 
                 img2MonthPaySlip.setImageResource(R.drawable.ic_ok);
 
-                Toast.makeText(context, getString(R.string.is_doc_upload), Toast.LENGTH_LONG).show();
+                Toast.makeText(context, getString(R.string.is_doc_upload), Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(context, getString(R.string.server_error), Toast.LENGTH_LONG).show();
+                Toast.makeText(context, getString(R.string.server_error), Toast.LENGTH_SHORT).show();
             }
         } else if (uploadDocType.equalsIgnoreCase(getString(R.string.doc_pay_slip_3))) {
             if (uploadDocumentResponse.getPAY_SLIP_3().isUploaded()) {
 
                 img3MonthPaySlip.setImageResource(R.drawable.ic_ok);
 
-                Toast.makeText(context, getString(R.string.is_doc_upload), Toast.LENGTH_LONG).show();
+                Toast.makeText(context, getString(R.string.is_doc_upload), Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(context, getString(R.string.server_error), Toast.LENGTH_LONG).show();
+                Toast.makeText(context, getString(R.string.server_error), Toast.LENGTH_SHORT).show();
             }
         } else if (uploadDocType.equalsIgnoreCase(getString(R.string.doc_photo))) {
             if (uploadDocumentResponse.getPHOTO().isUploaded()) {
 
                 imgPhotoUpload.setImageResource(R.drawable.ic_ok);
 
-                Toast.makeText(context, getString(R.string.is_doc_upload), Toast.LENGTH_LONG).show();
+                Toast.makeText(context, getString(R.string.is_doc_upload), Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(context, getString(R.string.server_error), Toast.LENGTH_LONG).show();
+                Toast.makeText(context, getString(R.string.server_error), Toast.LENGTH_SHORT).show();
             }
         } else if (uploadDocType.equalsIgnoreCase(getString(R.string.doc_company_id))) {
             if (uploadDocumentResponse.getCOMPANY_ID().isUploaded()) {
@@ -1170,9 +1553,9 @@ public class DocumentUploadFragment extends Fragment {
 
                 imgCompanyIDUpload.setImageResource(R.drawable.ic_ok);
 
-                Toast.makeText(context, getString(R.string.is_doc_upload), Toast.LENGTH_LONG).show();
+                Toast.makeText(context, getString(R.string.is_doc_upload), Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(context, getString(R.string.server_error), Toast.LENGTH_LONG).show();
+                Toast.makeText(context, getString(R.string.server_error), Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -1226,11 +1609,8 @@ public class DocumentUploadFragment extends Fragment {
         imgCamera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                try {
-                    captureImage();
-                } catch (IOException e) {
-                    Common.logExceptionToCrashlaytics(e);
-                }
+                //                    captureImage();
+                dispatchTakePictureIntent();
             }
         });
         btnCancelFileToUpload.setOnClickListener(new View.OnClickListener() {
@@ -1248,19 +1628,19 @@ public class DocumentUploadFragment extends Fragment {
                         uploadDocumentUrl(getType(filePath));
 //                    } else if (sharedPreferences.getString(getString(R.string.loan_source), "").equals(getString(R.string.loantap))) {
                         try {
+                            Log.e(TAG,"Document Type--- "+uploadDocType);
                           uploadDocumentLoanTap(generateLoanTapUploadDocumentRequest(uploadDocType));
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
-                    } else {
-                        callClikFinDocCall();
                     }
+                        callClikFinDocCall();
                 } else {
                     Common.networkDisconnectionDialog(context);
                 }
 
             } else {
-                Toast.makeText(context, "Please select file to upload", Toast.LENGTH_LONG).show();
+                Toast.makeText(context, "Please select file to upload", Toast.LENGTH_SHORT).show();
             }
 
         });
@@ -1284,15 +1664,36 @@ public class DocumentUploadFragment extends Fragment {
         UploadDocument1 uploadDoc = new UploadDocument1();
         uploadDoc.setFile(Base64.getEncoder().withoutPadding().encodeToString(fileContent));
         uploadDoc.setExt(AppFileUtils.getFileExtension(file.getName()));
-        uploadDoc.setFileName("address_proof");     //todo
+        uploadDoc.setFileName(getLoanTapDocType(uploadDocType));     //todo
         uploadDoc.setApplicationId(sharedPreferences.getString("LOANTAPAPPID", ""));
         loanTapUploadRequest.setUploadDocument1(uploadDoc);
         return loanTapUploadRequest;
     }
 
+    /**
+     * loantap document type
+     * @param uploadDocType
+     * @return
+     */
+    private String getLoanTapDocType(String uploadDocType) {
+        ProofJsonItem[] proofData = new Gson().fromJson(proofJson, ProofJsonItem[].class);
+        if(uploadDocType.contains("PAY_SLIP")){
+            uploadDocType = uploadDocType.replace("PAY_SLIP","SALARY_SLIP");
+        }
+        String[] uploadDocTypees = uploadDocType.replace("_"," ").split(" ");
+        String combinedUploadString = uploadDocTypees.length>1?( uploadDocTypees[0]+" "+uploadDocTypees[1]).toLowerCase():uploadDocType;
+        for (int i = 0; i < proofData.length; i++) {
+            if(Pattern.compile(Pattern.quote(proofData[i].getLabel()), Pattern.CASE_INSENSITIVE).matcher(uploadDocType).find() || (proofData[i].getLabel().toLowerCase(Locale.ROOT).contains(combinedUploadString))){
+                Log.e(TAG, "getLoanTapDocType: "+proofData[i].getValue());
+                return proofData[i].getValue();
+            }
+        }
+        return "other";
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void uploadDocumentLoanTap(LoanTapUploadDocumentRequest uploadRequest) {
-        showProgress(getActivity());
+//        showProgress(getActivity());
         String url = APIClient.BASE_LOANTAP_URL + "transact";
         Call<UploadDocResponse> call = null;
         try {
@@ -1305,12 +1706,15 @@ public class DocumentUploadFragment extends Fragment {
             @Override
             public void onResponse(Call<UploadDocResponse> call, Response<UploadDocResponse> response) {
                 Log.d("Loan Tap", "Response " + response.isSuccessful());
-                closeProgress();
-                if (response.body().getUploadDocument1()!=null) {
-                        Toast.makeText(getActivity(),"Document uploaded successfully", Toast.LENGTH_LONG).show();
+//                closeProgress();
+                if (response.body().getUploadDocument1().getAnswer()!=null) {
+                        Toast.makeText(getActivity(),"Document uploaded successfully", Toast.LENGTH_SHORT).show();
+                    closeProgress();
+                    dialog.dismiss();
                 } else {
                     Log.e("Loan tap upload issue", "Error received" + response.code());
                 }
+
             }
 
             @Override
@@ -1326,7 +1730,7 @@ public class DocumentUploadFragment extends Fragment {
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        Bitmap bitmap = null;
+//        Bitmap bitmap = null;
         if (requestCode == Constants.SELECT_DOC_FILE_CODE) {
             if (data != null) {
                 try {
@@ -1355,15 +1759,12 @@ public class DocumentUploadFragment extends Fragment {
                 }
             }
 
-        } else if (requestCode == Constants.CAMERA_REQUEST_CODE) {
-            chkFilePassword.setVisibility(View.GONE);
-            edFilePassword.setVisibility(View.GONE);
-            try {
-                bitmap = MediaStore.Images.Media.getBitmap(context.getContentResolver(), fileUri);
-            } catch (IOException e) {
-                Common.logExceptionToCrashlaytics(e);
-            }
+        }
+        if (requestCode == CAMERA_REQUEST_CODE && resultCode == RESULT_OK) {
+            Bundle extras = data.getExtras();
+            Bitmap bitmap = (Bitmap) extras.get("data");
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
             if (bitmap != null) {
                 bitmap.compress(Bitmap.CompressFormat.JPEG, 50, baos);
                 fileUri = Uri.parse(MediaStore.Images.Media.insertImage(context.getContentResolver(), bitmap, "attachment", null));
@@ -1380,6 +1781,7 @@ public class DocumentUploadFragment extends Fragment {
                     tvUploadDocMsg.setText(file.getPath());
                 }
 
+//            }
             }
         }
     }
@@ -1390,13 +1792,14 @@ public class DocumentUploadFragment extends Fragment {
         return cur.getString(cur.getColumnIndex("_data"));
     }
 
-    public void captureImage() throws IOException {
-        Intent intent = new Intent("android.media.action.IMAGE_CAPTURE");
-        fileUri = FileProvider.getUriForFile(context,
-                BuildConfig.APPLICATION_ID + ".provider",
-                getOutputMediaFile(Constants.MEDIA_TYPE_IMAGE));
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);
-        startActivityForResult(intent, Constants.CAMERA_REQUEST_CODE);
+    private void dispatchTakePictureIntent() {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        try {
+            startActivityForResult(takePictureIntent, CAMERA_REQUEST_CODE);
+        } catch (ActivityNotFoundException e) {
+            // display error state to the user
+            e.printStackTrace();
+        }
     }
 
 
@@ -1420,7 +1823,7 @@ public class DocumentUploadFragment extends Fragment {
             @Override
             public void onFailure(Call<UploadDocName> call, Throwable t) {
                 super.onFailure(call, t);
-                Toast.makeText(context, getString(R.string.internet_connectivity_issue), Toast.LENGTH_LONG).show();
+                Toast.makeText(context, getString(R.string.internet_connectivity_issue), Toast.LENGTH_SHORT).show();
                 Common.logAPIFailureToCrashlyatics(t);
             }
         });
@@ -1456,11 +1859,11 @@ public class DocumentUploadFragment extends Fragment {
                     if (checkIfMandatoryDocsUploaded(response.body().getData())) {
                         AllDocumentsUploaded();
                     } /*else {
-//                        Toast.makeText(getActivity(), "Please upload all the documents", Toast.LENGTH_LONG).show();
+//                        Toast.makeText(getActivity(), "Please upload all the documents", Toast.LENGTH_SHORT).show();
                         setIsDocumentUploadedImg();
                     }*/
                 } else {
-                    Toast.makeText(getActivity(), "Some error occurred", Toast.LENGTH_LONG).show();
+                    Log.e("All", "upward get documents uploaded failed");
                 }
             }
 
@@ -1468,7 +1871,7 @@ public class DocumentUploadFragment extends Fragment {
             public void onFailure(Call<DocumentReportResponse> call, Throwable t) {
                 t.printStackTrace();
                 Common.logAPIFailureToCrashlyatics(t);
-                Toast.makeText(context, "" + getString(R.string.server_error), Toast.LENGTH_LONG).show();
+                Toast.makeText(context, "" + getString(R.string.server_error), Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -1491,7 +1894,7 @@ public class DocumentUploadFragment extends Fragment {
                     editor.apply();
                     replaceFragment(new LoanApplicationStatusFragment());
                 } else {
-                    Toast.makeText(getActivity(), "Some error occurred", Toast.LENGTH_LONG).show();
+                    Log.e("All", "upward documents uploaded failed");
                 }
             }
 
@@ -1559,7 +1962,7 @@ public class DocumentUploadFragment extends Fragment {
 
     public void closeProgress() {
         try {
-            if (pDialog != null) {
+            if ( pDialog != null) {
                 pDialog.dismiss();
             }
         } catch (Exception e) {
@@ -1567,4 +1970,9 @@ public class DocumentUploadFragment extends Fragment {
         }
     }
 
+
+    public boolean isAttachedToActivity() {
+        boolean attached = isVisible() && getActivity() != null;
+        return attached;
+    }
 }

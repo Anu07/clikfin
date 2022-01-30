@@ -5,7 +5,6 @@ import static com.clikfin.clikfinapplication.fragment.EmploymentFragment.upwards
 import static com.clikfin.clikfinapplication.fragment.EmploymentFragment.upwardsUserID;
 import static com.clikfin.clikfinapplication.network.APIClient.LOANTAPPARTNERID;
 import static com.clikfin.clikfinapplication.network.APIClient.LOANTAPPRODUCTID;
-import static com.clikfin.clikfinapplication.network.APIClient.LOANTAP_APIKEY;
 
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -38,15 +37,14 @@ import com.clikfin.clikfinapplication.externalRequests.Request.UpwardLoanRequest
 import com.clikfin.clikfinapplication.externalRequests.Response.ApplyLoanResponse;
 import com.clikfin.clikfinapplication.externalRequests.Response.BankDetailsResponse;
 import com.clikfin.clikfinapplication.externalRequests.Response.UploadDocumentResponse;
-import com.clikfin.clikfinapplication.externalRequests.Response.loantapResponse.LoanTapAddApplicationResponse;
+import com.clikfin.clikfinapplication.externalRequests.loantap.enquireRequest.AddApplication;
+import com.clikfin.clikfinapplication.externalRequests.loantap.enquireRequest.AddApplicationRequest;
+import com.clikfin.clikfinapplication.externalRequests.Response.loantapResponse.addApplication.AddApplicationResponse;
 import com.clikfin.clikfinapplication.externalRequests.Response.upward.UpwardLoanResponse;
-import com.clikfin.clikfinapplication.externalRequests.loantap.AddApplication1;
 import com.clikfin.clikfinapplication.network.APICallbackInterface;
 import com.clikfin.clikfinapplication.network.APIClient;
-import com.clikfin.clikfinapplication.util.AESUtil;
 import com.clikfin.clikfinapplication.util.BaaSEncryptDecrypt;
 import com.clikfin.clikfinapplication.util.Common;
-import com.clikfin.clikfinapplication.util.EncryptUtils;
 import com.google.gson.Gson;
 
 import java.lang.annotation.Annotation;
@@ -67,9 +65,10 @@ public class BankDetailsFragment extends Fragment {
     Context context;
     ProgressBar progress;
     SharedPreferences sharedPreferences;
-    private EditText edAccountHolderName, edAccountNo, edReEnterAccountNo, edIFSCCode;
-    private TextView accountHolderName_error, accountNumber_error, reEnterAccountNumber_error, IFSCCode_error, bankName_error;
+    private EditText edAccountHolderName, edAccountNo, edReEnterAccountNo, edIFSCCode, edBranchName;
+    private TextView accountHolderName_error, accountNumber_error,bankBranchName_error, reEnterAccountNumber_error, IFSCCode_error, bankName_error;
     private ProgressDialog pDialog;
+    String[] mCityArray;
 
     public BankDetailsFragment() {
         // Required empty public constructor
@@ -83,6 +82,7 @@ public class BankDetailsFragment extends Fragment {
             activity = (FragmentActivity) context;
         }
     }
+
 
     public static BankDetailsFragment newInstance(String param1, String param2) {
         BankDetailsFragment fragment = new BankDetailsFragment();
@@ -98,15 +98,21 @@ public class BankDetailsFragment extends Fragment {
         edAccountNo = view.findViewById(R.id.edAccountNo);
         edReEnterAccountNo = view.findViewById(R.id.edReEnterAccountNo);
         edIFSCCode = view.findViewById(R.id.edIFSCCOde);
+        edBranchName = view.findViewById(R.id.edBranchName);
         spinnerBankName = view.findViewById(R.id.spinnerBankName);
         btnBankInfoSubmit = view.findViewById(R.id.btnBankInfoSubmit);
         accountHolderName_error = view.findViewById(R.id.accountHolderName_error);
         accountNumber_error = view.findViewById(R.id.accountNumber_error);
+        bankBranchName_error = view.findViewById(R.id.bankBranchName_error);
         reEnterAccountNumber_error = view.findViewById(R.id.reEnterAccountNumber_error);
         IFSCCode_error = view.findViewById(R.id.IFSCCode_error);
         bankName_error = view.findViewById(R.id.bankName_error);
         sharedPreferences = context.getSharedPreferences(getString(R.string.shared_preferences), Context.MODE_PRIVATE);
         edAccountHolderName.setFilters(new InputFilter[]{Common.letterFilter});
+
+        mCityArray = getResources().getStringArray(R.array.city_array);
+
+
         if (Common.isNetworkConnected(context)) {
             getBankNames();
         } else {
@@ -121,7 +127,10 @@ public class BankDetailsFragment extends Fragment {
                     if (Common.isNetworkConnected(context)) {
                         if (sharedPreferences.getString(getString(R.string.loan_source), "").equalsIgnoreCase(getString(R.string.upward))) {
                             generateLoanApplication(completeUpwardApplication(bankDetailsData()));
-                            generateLoanTapApplication(createLoanApplication(bankDetailsData()));
+                            AddApplicationRequest requestData = createLoanApplication(bankDetailsData());
+                            if(checkCityList(requestData)){
+                                generateLoanTapApplication(requestData);
+                            }
                         } /*else if (sharedPreferences.getString(getString(R.string.loan_source), "").equalsIgnoreCase(getString(R.string.loantap))) {
 //todo                            generateLoanTapApplication(createLoanApplication(bankDetailsData()));
                             generateLoanApplication(completeUpwardApplication(bankDetailsData()));
@@ -138,19 +147,61 @@ public class BankDetailsFragment extends Fragment {
         return view;
     }
 
+    private boolean checkCityList(AddApplicationRequest requestData) {
+        for (int i = 0; i < mCityArray.length; i++) {
+            if(mCityArray[i].equalsIgnoreCase(requestData.getAddApplication1().getOfficeCity()) || mCityArray[i].equalsIgnoreCase(requestData.getAddApplication1().getHomeCity())){
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     /**
      * create application LoanTap
      *
      * @param completeUpwardApplication
      * @return
+     * "permanent_addr_line1": "permanent_addr_line1",
+     *                 "permanent_zipcode": "permanent_zipcode",
+     *                 "permanent_city": "permanent_city",
+     *                 "office_addr_line1": "office_addr_line1",
+     *                 "office_city": "office_city",
+     *                 "office_zipcode": "office_zipcode",
+     *                 "official_email": "official_email",
+     *                 "ecs_bank_acc_no": "ecs_bank_acc_no",
+     *                 "ecs_bank_branch": "ecs_bank_branch",
+     *                 "ecs_bank": "ecs_bank",
+     *                 "ecs_cust_name": "ecs_cust_name",
+     *                 "ecs_ifsc_code": "ecs_ifsc_code",
+     *                 "ecs_bank_city": "ecs_bank_city",
+     *                 "ecs_account_type": "ecs_account_type"
      */
-    private AddApplication1 createLoanApplication(BankDetails bankDetailsData) {
+    private AddApplicationRequest createLoanApplication(BankDetails bankDetailsData) {
         String employeeDetailsString = sharedPreferences.getString(getString(R.string.employment_details_loantap), "");
-        AddApplication1 loanTapApplication = new Gson().fromJson(employeeDetailsString, AddApplication1.class);
+        AddApplication loanTapApplication = new Gson().fromJson(employeeDetailsString, AddApplication.class);
+        String personalData = sharedPreferences.getString(getString(R.string.personal_details), "");
+        PersonalDetails pDetails = new Gson().fromJson(personalData, PersonalDetails.class);
         loanTapApplication.setSalaryBankName(bankDetailsData.getBankName());
         loanTapApplication.setSalaryAccountNo(bankDetailsData.getAccountNumber());
-        return loanTapApplication;
+        loanTapApplication.setMaritalStatus(loanTapApplication.getMaritalStatus().toLowerCase());
+        loanTapApplication.setEcsBank(bankDetailsData.getBankName());
+        loanTapApplication.setEcsBankAccNo(bankDetailsData.getAccountNumber());
+        loanTapApplication.setEcsBankBranch(bankDetailsData.getAccountNumber());
+        loanTapApplication.setEcsCustName(bankDetailsData.getAccountHolderName());
+        loanTapApplication.setEcsIfscCode(bankDetailsData.getIFSCCode());
+        loanTapApplication.setEcsBankCity(pDetails.getCurrentAddressCity());
+        loanTapApplication.setEcsAccountType("salary account");
+        loanTapApplication.setPermanentCity(loanTapApplication.getHomeCity());
+        loanTapApplication.setPermanentZipcode(loanTapApplication.getHomeZipcode());
+        loanTapApplication.setPermanentAddrLine1(pDetails.getPermanentAddressLine1());
+        loanTapApplication.setOfficeAddrLine1(pDetails.getCurrentAddressLine1());
+        loanTapApplication.setOfficeCity(pDetails.getCurrentAddressCity());
+        loanTapApplication.setOfficeZipcode(pDetails.getCurrentAddressPinCode());
+        Log.e(TAG, "createLoanApplication: " + new Gson().toJson(loanTapApplication));
+        AddApplicationRequest mainRequest  = new AddApplicationRequest();
+        mainRequest.setAddApplication1(loanTapApplication);
+        return mainRequest;
     }
 
     private UpwardLoanRequestModel completeUpwardApplication(BankDetails bankDetailsData) {
@@ -427,6 +478,15 @@ public class BankDetailsFragment extends Fragment {
             Common.setError(accountNumber_error, "", context);
             returnValue = true;
         }
+        if (edBranchName.getText().toString().trim().equalsIgnoreCase("")) {
+            Common.setError(bankBranchName_error, "Account Number " + getString(R.string.input_field_empty), context);
+            edBranchName.requestFocus();
+            return false;
+        } else {
+            Common.setError(accountNumber_error, "", context);
+            returnValue = true;
+        }
+
         if (edReEnterAccountNo.getText().toString().trim().equalsIgnoreCase("")) {
             Common.setError(reEnterAccountNumber_error, "Re-Enter Account Number " + getString(R.string.input_field_empty), context);
             edReEnterAccountNo.requestFocus();
@@ -458,36 +518,37 @@ public class BankDetailsFragment extends Fragment {
 
     /**
      * generating loantap application
+     * @param loantapApplication
      */
-    private void generateLoanTapApplication(AddApplication1 loantapApplication) {
+    private void generateLoanTapApplication(AddApplicationRequest loantapApplication) {
         showProgress(getActivity());
         String url = APIClient.BASE_LOANTAP_URL + "transact";
 //        encrypt = encrypt(et.getText().toString().getBytes(), secretKey, IV);
-        Call<LoanTapAddApplicationResponse> call = null;
+        Call<AddApplicationResponse> call = null;
         try {
             BaaSEncryptDecrypt.setup();
             call = APIClient.getClient(APIClient.type.JSON)
-                    .generateLoanTapApplication(url, BaaSEncryptDecrypt.encrypt(String.valueOf(System.currentTimeMillis()/1000L)), LOANTAPPRODUCTID, LOANTAPPARTNERID, loantapApplication);
-            call.enqueue(new Callback<LoanTapAddApplicationResponse>() {
+                    .generateLoanTapApplication(url, BaaSEncryptDecrypt.encrypt(String.valueOf(System.currentTimeMillis() / 1000L)), LOANTAPPRODUCTID, LOANTAPPARTNERID, loantapApplication);
+            call.enqueue(new Callback<AddApplicationResponse>() {
                 @Override
-                public void onResponse(Call<LoanTapAddApplicationResponse> call, Response<LoanTapAddApplicationResponse> response) {
-                    Log.d(TAG, "Response " + response.isSuccessful());
+                public void onResponse(Call<AddApplicationResponse> call, Response<AddApplicationResponse> response) {
+                    Log.e(TAG, "Response ---" + response);
                     closeProgress();
-                    if (response.code() == 200) {
+                    if (response.body().getAddApplication1().getAnswer()!=null && response.body().getAddApplication1().getAnswer().getStatus().equalsIgnoreCase("success")) {
                         if (response.body().getAddApplication1() != null) {
+                            Log.e(TAG, "onResponse: LOANTAPP APP "+response.body().getAddApplication1().getAnswer().getData().getLappId() );
                             sharedPreferences.edit().putString("LOANTAPAPPID", response.body().getAddApplication1().getAnswer().getData().getLappId()).apply();
 //                            replaceFragment(new DocumentUploadFragment());
                         } else {
                             Toast.makeText(getActivity(), "Auth Token Expired", Toast.LENGTH_LONG).show();
                         }
-
                     } else {
                         Log.e("BankDetailsFragment", "Error received" + response.code());
                     }
                 }
 
                 @Override
-                public void onFailure(Call<LoanTapAddApplicationResponse> call, Throwable t) {
+                public void onFailure(Call<AddApplicationResponse> call, Throwable t) {
                     closeProgress();
                     t.printStackTrace();
                 }
@@ -505,7 +566,7 @@ public class BankDetailsFragment extends Fragment {
      * @param upwardRequest
      */
     private void generateLoanApplication(UpwardLoanRequestModel upwardRequest) {
-        showProgress(getActivity());
+//        showProgress(getActivity());
         String url = APIClient.BASE_UPWARD_PROD_URL + "loan/data/";
         Call<UpwardLoanResponse> call = APIClient.getClient(APIClient.type.JSON)
                 .generateLoanApplicationUpwards(url, upwardsUserID, upwardsAuthToken, upwardRequest);
@@ -555,5 +616,8 @@ public class BankDetailsFragment extends Fragment {
         }
     }
 
-
+    public boolean isAttachedToActivity() {
+        boolean attached = isVisible() && getActivity() != null;
+        return attached;
+    }
 }

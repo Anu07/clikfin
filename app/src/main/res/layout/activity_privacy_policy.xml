@@ -292,23 +292,25 @@
             android:layout_marginLeft="14dp"
             android:layout_marginRight="14dp"
             android:layout_marginBottom="20dp"
+            android:visibility="gone"
             android:layout_marginTop="30dp"
             android:background="@color/boarder_color">
-        <CheckBox
-            android:id="@+id/check"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
 
-            android:text="I agree to terms of use and privacy policy and
+            <CheckBox
+                android:id="@+id/check"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+
+                android:text="I agree to terms of use and privacy policy and
 allow receiving communication from Clikfin
-via SMS and email"
-           />
+via SMS and email" />
         </RelativeLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
+            android:visibility="gone"
             android:weightSum="2"
             android:layout_marginBottom="25dp"
             android:layout_marginTop="25dp">

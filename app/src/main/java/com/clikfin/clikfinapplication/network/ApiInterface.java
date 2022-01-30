@@ -21,15 +21,15 @@ import com.clikfin.clikfinapplication.externalRequests.Response.BankDetailsRespo
 import com.clikfin.clikfinapplication.externalRequests.Response.UploadDocName;
 import com.clikfin.clikfinapplication.externalRequests.Response.UploadDocumentResponse;
 import com.clikfin.clikfinapplication.externalRequests.Response.loantapResponse.EnquireResponse.EnquireResponse;
-import com.clikfin.clikfinapplication.externalRequests.Response.loantapResponse.LoanTapAddApplicationResponse;
+import com.clikfin.clikfinapplication.externalRequests.Response.loantapResponse.addApplication.AddApplicationResponse;
 import com.clikfin.clikfinapplication.externalRequests.Response.loantapResponse.upload.UploadDocResponse;
 import com.clikfin.clikfinapplication.externalRequests.Response.upward.UpwardLoanResponse;
 import com.clikfin.clikfinapplication.externalRequests.Response.upward.docUpload.DocumentURLGenerationResponse;
 import com.clikfin.clikfinapplication.externalRequests.Response.upward.documentRespone.DocumentReportResponse;
 import com.clikfin.clikfinapplication.externalRequests.Response.upward.loanStatus.LoanStatusResponse;
 import com.clikfin.clikfinapplication.externalRequests.Response.upward.updateStatus.StatusDocumentResponse;
-import com.clikfin.clikfinapplication.externalRequests.loantap.AddApplication1;
 import com.clikfin.clikfinapplication.externalRequests.loantap.LoanTapUploadDocumentRequest;
+import com.clikfin.clikfinapplication.externalRequests.loantap.enquireRequest.AddApplicationRequest;
 import com.clikfin.clikfinapplication.externalRequests.loantap.enquireRequest.EnquireRequest;
 
 import okhttp3.MultipartBody;
@@ -177,11 +177,11 @@ public interface ApiInterface {
     //LoanTap
     @Headers("Content-type: application/json")
     @POST
-    Call<LoanTapAddApplicationResponse> generateLoanTapApplication(@Url String url,
-                                                                   @Header("X-API-AUTH") String APIkey,
-                                                                   @Header("REQ-PRODUCT-ID") String productId,
-                                                                   @Header("PARTNER-ID") String partnerId,
-                                                                   @Body AddApplication1 loanTapRequest);
+    Call<AddApplicationResponse> generateLoanTapApplication(@Url String url,
+                                                            @Header("X-API-AUTH") String APIkey,
+                                                            @Header("REQ-PRODUCT-ID") String productId,
+                                                            @Header("PARTNER-ID") String partnerId,
+                                                            @Body AddApplicationRequest loanTapRequest);
 
     @Headers("Content-type: application/json")
     @POST

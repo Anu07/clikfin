@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -8,43 +9,57 @@
 
     <ImageView
         android:id="@+id/info_image"
+        android:layout_width="300dp"
+        android:layout_height="400dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="80dp"
+        android:scaleType="fitCenter" />
+
+    <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_above="@+id/info_header"
-        android:layout_gravity="center_horizontal"
-
-        android:gravity="center"
-        android:scaleType="centerCrop" />
-
-    <TextView
-        android:id="@+id/info_header"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/info_description"
-        android:layout_centerHorizontal="true"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="@dimen/double_general_padding_margin"
-        android:letterSpacing="0.01"
-        android:lineSpacingExtra="0sp"
-        android:textColor="@color/instant_loan_color"
-        android:textSize="@dimen/medium_text"
-        android:textStyle="bold"
-        tools:text="Credit Score" />
-
-    <TextView
-        android:id="@+id/info_description"
-        android:layout_width="215dp"
-        android:layout_height="wrap_content"
+        android:layout_height="300dp"
         android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="@dimen/input_field_margin"
-        android:layout_marginBottom="@dimen/input_field_margin"
-        android:lineSpacingExtra="2.4sp"
-        android:text="@string/ob_desc1"
-        android:textAlignment="center"
-        android:textColor="@color/input_color"
-        android:textSize="@dimen/small_text" />
+        android:layout_below="@+id/info_image"
+        android:backgroundTint="@color/card_bg"
+        app:cardCornerRadius="20dp">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_margin="10dp"
+            android:layout_height="match_parent">
+
+            <TextView
+                android:id="@+id/info_header"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif"
+                android:letterSpacing="0.01"
+                android:lineSpacingExtra="0sp"
+                android:layout_marginTop="50dp"
+                android:layout_centerHorizontal="true"
+                android:textColor="@color/darkBlueBg"
+                android:textSize="@dimen/medium_text"
+                android:textStyle="bold"
+                tools:text="Credit Score" />
+
+            <TextView
+                android:id="@+id/info_description"
+                android:layout_width="215dp"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="@dimen/input_field_margin"
+                android:layout_marginBottom="@dimen/input_field_margin"
+                android:fontFamily="sans-serif"
+                android:lineSpacingExtra="2.4sp"
+                android:layout_below="@+id/info_header"
+                android:text="@string/ob_desc1"
+                android:textAlignment="center"
+                android:textColor="@color/black"
+                android:textSize="@dimen/small_text" />
+        </RelativeLayout>
+
+    </androidx.cardview.widget.CardView>
 
 
 </RelativeLayout>

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,7 +28,7 @@ import com.clikfin.clikfinapplication.externalRequests.Request.EmployeeDetails;
 import com.clikfin.clikfinapplication.externalRequests.Request.PersonalDetails;
 import com.clikfin.clikfinapplication.externalRequests.Request.UpwardLoanRequestModel;
 import com.clikfin.clikfinapplication.externalRequests.Response.ApplyLoanResponse;
-import com.clikfin.clikfinapplication.externalRequests.loantap.AddApplication1;
+import com.clikfin.clikfinapplication.externalRequests.loantap.enquireRequest.AddApplication;
 import com.clikfin.clikfinapplication.network.APICallbackInterface;
 import com.clikfin.clikfinapplication.network.APIClient;
 import com.clikfin.clikfinapplication.util.Common;
@@ -48,6 +49,7 @@ import retrofit2.internal.EverythingIsNonNull;
 
 public class EmploymentFragment extends Fragment {
 
+    private static final String TAG = EmploymentFragment.class.getName();
     private Spinner empTypeSpinner, tenureSpinner, spinnerModeOfSalary, spinnerOrganizationType, spinnerLoanPurpose;
 
     private EditText edCurrentWorkExpYear, edTotalWorkExpYear, edDesignation, edSalary, edOfficeAddressCity, edCompanyName, edOfficialEmailId, edOfficeAddressLine1, edOfficeAddressLine2, edOfficeAddressLandMark, edOfficeAddressPinCode, edOfficePhoneNumber, edApplyLoanAmount, edPreviousLoanAmount, edPreviousMonthlyEMI, edLoanFinancierName;
@@ -177,33 +179,41 @@ public class EmploymentFragment extends Fragment {
      * @param empInfo
      * @return
      */
-    private AddApplication1 createLoanTapRequest(EmployeeDetails empInfo) {
+    private AddApplication createLoanTapRequest(EmployeeDetails empInfo) {
         String personalData = sharedPreferences.getString(getString(R.string.personal_details), "");
         PersonalDetails pDetails = new Gson().fromJson(personalData, PersonalDetails.class);
-        AddApplication1 LoanTapApplication = new AddApplication1();
+        AddApplication LoanTapApplication = new AddApplication();
         LoanTapApplication.setFullName(pDetails.getFirstName() + " " + pDetails.getLastName());
         LoanTapApplication.setDob(pDetails.getDateOfBirth());
         LoanTapApplication.setFathersName(pDetails.getFatherName());
         LoanTapApplication.setGender(pDetails.getGender());
-        LoanTapApplication.setJobType(empInfo.getEmploymentType());
+        Log.e(TAG, "createLoanTapRequest: Emp Type"+empInfo.getEmploymentType().toLowerCase() );
+        LoanTapApplication.setJobType(empInfo.getEmploymentType().toLowerCase());
         LoanTapApplication.setEmployerName(empInfo.getCompanyName());
         LoanTapApplication.setAddressLandmark(pDetails.getCurrentAddressLandmark());
         LoanTapApplication.setEducationalQualification(pDetails.getEducationalQualification());
         LoanTapApplication.setHomeAddrLine1(pDetails.getPermanentAddressLine1());
         LoanTapApplication.setHomeAddrLine2(pDetails.getPermanentAddressLine2());
+        LoanTapApplication.setOfficialEmail(empInfo.getOfficialEmail());
         LoanTapApplication.setHomeCity(pDetails.getPermanentAddressCity());
-        LoanTapApplication.setHomeOwnershipType(pDetails.getPermanentAddressType());
+        Log.e(TAG, "createLoanTapRequest: Home Type"+pDetails.getPermanentAddressType().toLowerCase() );
+        LoanTapApplication.setHomeOwnershipType(pDetails.getPermanentAddressType().toLowerCase());
         LoanTapApplication.setHomeZipcode(pDetails.getPermanentAddressPinCode());
-        LoanTapApplication.setFixedIncome(String.valueOf(empInfo.getSalary()));
+        LoanTapApplication.setFixedIncome(String.valueOf((int)empInfo.getSalary()));
         LoanTapApplication.setMobileNumber(pDetails.getPhoneNumber());
         LoanTapApplication.setEmploymentYear(empInfo.getCurrentExperience());
-        LoanTapApplication.setEmiOutflow(String.valueOf(empInfo.getMonthlyEMI()));
+        LoanTapApplication.setEmiOutflow(String.valueOf((int)empInfo.getMonthlyEMI()));
+        LoanTapApplication.setPersonalEmail(pDetails.getEmail());
+        Log.e(TAG, "createLoanTapRequest: EMI Type"+ (int) empInfo.getMonthlyEMI());
         LoanTapApplication.setLoanCity(empInfo.getOfficialAddressCity());
         LoanTapApplication.setMaritalStatus(pDetails.getMaritalStatus());
         LoanTapApplication.setPanCard(pDetails.getPanNumber());
-        LoanTapApplication.setMaritalStatus(pDetails.getMaritalStatus());
+        LoanTapApplication.setMaritalStatus(pDetails.getMaritalStatus().toLowerCase());
+        Log.e(TAG, "createLoanTapRequest: Mariatal Status"+pDetails.getMaritalStatus().toLowerCase() );
         LoanTapApplication.setMothersMaidenName(pDetails.getMotherName());
-        LoanTapApplication.setReqAmount(String.valueOf(empInfo.getAmount()));
+        LoanTapApplication.setReqAmount(String.valueOf((int)empInfo.getAmount()));
+        Log.e(TAG, "createLoanTapRequest: Loan Amount"+(int)empInfo.getAmount());
+
         LoanTapApplication.setReqTenure(empInfo.getTenure());
         return LoanTapApplication;
     }
@@ -418,7 +428,7 @@ public class EmploymentFragment extends Fragment {
             Common.setError(salaryError, "Salary " + getString(R.string.input_field_empty), context);
             edSalary.requestFocus();
             return false;
-        } else if (Integer.parseInt(edSalary.getText().toString()) < 13000) {
+        } else if (Integer.parseInt(edSalary.getText().toString()) < 20000) {
             Common.setError(salaryError, getString(R.string.min_salary), context);
             edSalary.requestFocus();
             return false;

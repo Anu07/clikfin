@@ -73,6 +73,7 @@ disbursal of loan. This helps in providing a smoother and seamless experience wh
     <string name="apply_now">Apply Now</string>
     <string name="check_now">Check Now</string>
     <string name="refer_now">Refer Now</string>
+    <string name="referearn">Refer and Earn</string>
     <string name="search">Search</string>
 
     <string name="name_empty_error">Please enter your name</string>
@@ -243,7 +244,7 @@ disbursal of loan. This helps in providing a smoother and seamless experience wh
     <string name="select_educational_qualification">Please select Educational Qualification</string>
     <string name="select_mode_of_salary">Please select mode of salary</string>
     <string name="select_tenure_period">Please select tenure period</string>
-    <string name="min_salary">Salary can not be less than 13K</string>
+    <string name="min_salary">Salary can not be less than 20K</string>
     <string name="min_loan_amount">Loan amount can not be less than 20000</string>
     <string name="upload_doc_msg">Please upload all documents</string>
     <string name="references_pending_msg">Your loan application is under review</string>
@@ -382,9 +383,44 @@ disbursal of loan. This helps in providing a smoother and seamless experience wh
     <string name="upward">UPWARD</string>
     <string name="loan_source">loan source</string>
     <string name="pre_rejection">Pre-Rejection</string>
+    <string name="cibil_chck">CIBIL Check</string>
     <string name="loantap">LOANTAP</string>
+    <string name="emi_calc">EMI Calculator</string>
     <string name="employment_details_loantap">employment details loantap</string>
+    <string name="ed_account_branch">Bank Branch</string>
+    <string name="click_now">Click Now</string>
+    <string name="loan_under_review">Yeah!! Loan applied successfully.</string>
+    <string name="money_disbursed">Money disbursed successfully</string>
+    <string name="loan_approved">Our team will revert you shortly for a Quick Disbursal of Loan.</string>
     <bool name="is_login_with_mobile_number">false</bool>
+
+    <string-array name="city_array">
+        <item>ajmer</item>
+        <item>bangalore</item>
+        <item>bhubaneswar</item>
+        <item>howrah</item>
+        <item>lucknow</item>
+        <item>pune</item>
+        <item>mumbai</item>
+        <item>mysore</item>
+        <item>navi-mumbai</item>
+        <item>delhi-ncr</item>
+        <item>chennai</item>
+        <item>hyderabad</item>
+        <item>ahmedabad</item>
+        <item>chandigarh</item>
+        <item>bhopal</item>
+        <item>indore</item>
+        <item>raipur</item>
+        <item>vadodara</item>
+        <item>coimbatore</item>
+        <item>jaipur</item>
+        <item>kolkata</item>
+        <item>nagpur</item>
+        <item>nashik</item>
+        <item>surat</item>
+        <item>visakhapatnam</item>
+    </string-array>
 
 
 </resources>

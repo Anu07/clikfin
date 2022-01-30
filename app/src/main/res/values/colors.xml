@@ -8,7 +8,7 @@
     <color name="off_white">#f8f8ff</color>
     <color name="black">#000000</color>
     <color name="grey">#dfdfdf</color>
-
+    <color name="darkBlueBg">#004481</color>
     <color name="background_start">#053171</color>
     <color name="background_end">#0943ae</color>
     <color name="background">#f2f5fa</color>
@@ -32,4 +32,6 @@
     //color not used
     <color name="light_primary">#FFCDA9FF</color>
     <color name="scroll_background">#c9e8fb</color>
+    <color name="card_bg">#f3f3ff</color>
+    <color name="yellow">#f7c92b</color>
 </resources>

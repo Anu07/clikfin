@@ -18,12 +18,13 @@
         android:id="@+id/side_navigation_view"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        app:popupTheme="@style/AppTheme.PopupOverlay"
         android:layout_gravity="start"
         app:headerLayout="@layout/nav_header_main"
         android:foregroundGravity="right"
         android:textAlignment="viewStart"
-        android:background="@color/white"
+        app:itemTextColor="@color/white"
+        app:layout_behavior="@string/hide_bottom_view_on_scroll_behavior"
+        android:background="@drawable/ic_profile_bg"
         app:menu="@menu/activity_main_drawer">
     </com.google.android.material.navigation.NavigationView>
 </androidx.drawerlayout.widget.DrawerLayout>

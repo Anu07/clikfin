@@ -968,12 +968,15 @@ public class BasicDetailsFragment extends Fragment {
         personalDetails.setAadhaarNumber(edAadharCard.getText().toString());
         personalDetails.setPanNumber(edPanCard.getText().toString());
         RadioButton selectedGender = activity.findViewById(rgGender.getCheckedRadioButtonId());
-        personalDetails.setGender(selectedGender.getText().toString());
+        Log.e(TAG,"selected gender"+selectedGender.getText().toString());
+        personalDetails.setGender(selectedGender.getText().toString().isEmpty()?"Unmarried":selectedGender.getText().toString());
+
         personalDetails.setDateOfBirth(edDOB.getText().toString());
         personalDetails.setFormattedDate(formattedDate);
         Log.e(TAG,"formatted date"+formattedDate);
         RadioButton selectedMaritalStatus = activity.findViewById(rgMaritalStatus.getCheckedRadioButtonId());
         personalDetails.setMaritalStatus(selectedMaritalStatus.getText().toString());
+        Log.e(TAG,"MArital status"+selectedMaritalStatus.getText().toString());
 
         if (selectedMaritalStatus.getText().toString().equalsIgnoreCase(getString(R.string.rd_married))) {
             personalDetails.setSpouseName(edSpousename.getText().toString());

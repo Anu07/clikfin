@@ -2,9 +2,9 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-android:layout_margin="@dimen/input_field_margin"
-    android:elevation="5dp"
+    android:layout_margin="@dimen/input_field_margin"
     android:background="@drawable/border"
+    android:elevation="5dp"
     android:orientation="vertical">
 
     <LinearLayout
@@ -13,71 +13,89 @@ android:layout_margin="@dimen/input_field_margin"
         android:layout_marginLeft="@dimen/input_field_padding"
         android:layout_marginTop="@dimen/input_field_padding"
         android:layout_marginRight="@dimen/input_field_padding"
-        android:orientation="horizontal">
+        android:orientation="vertical">
 
         <RelativeLayout
             android:id="@+id/layBasicInfo"
-            android:layout_width="0dp"
-            android:layout_height="120dp"
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
             android:layout_weight="0.5"
-            android:background="@drawable/border"
+            android:background="@drawable/border_white"
             android:elevation="5dp"
             android:padding="@dimen/input_field_padding">
 
             <TextView
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_margin="10dp"
+                android:layout_toRightOf="@+id/imgBasicInfo"
+                android:layout_toLeftOf="@+id/imgIsBasicInfoUploaded"
                 android:text="Basic Information"
                 android:textColor="@color/splash_color"
+                android:textSize="@dimen/title_text"
                 android:textStyle="bold" />
 
             <ImageView
                 android:id="@+id/imgBasicInfo"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
-                android:src="@drawable/user_profile" />
+                android:layout_centerVertical="true"
+                android:background="@drawable/ic_user_profile_background"
+                android:padding="15dp"
+                android:src="@drawable/ic_basic_info_icon" />
 
             <ImageView
                 android:id="@+id/imgIsBasicInfoUploaded"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
-                android:layout_alignParentBottom="true"
+                android:layout_centerVertical="true"
                 android:src="@drawable/right_arrow" />
         </RelativeLayout>
 
         <RelativeLayout
             android:id="@+id/layProfessionalInfo"
-            android:layout_width="0dp"
-            android:layout_height="120dp"
-            android:padding="@dimen/input_field_padding"
-            android:layout_marginLeft="@dimen/text_margin_left"
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            android:layout_marginTop="5dp"
             android:layout_weight="0.5"
-            android:background="@drawable/border"
+            android:background="@drawable/border_white"
             android:elevation="5dp"
-           >
+            android:padding="@dimen/input_field_padding">
 
             <TextView
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginEnd="10dp"
+                android:layout_marginBottom="10dp"
+                android:layout_toLeftOf="@+id/imgIsProfessionalInfoUploaded"
+                android:layout_toRightOf="@+id/imgProfessionalInfo"
                 android:text="Professional Information"
                 android:textColor="@color/splash_color"
+                android:textSize="@dimen/title_text"
                 android:textStyle="bold" />
 
             <ImageView
                 android:id="@+id/imgProfessionalInfo"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
-                android:src="@drawable/ic_professional" />
+                android:layout_alignParentLeft="true"
+                android:layout_centerVertical="true"
+                android:background="@drawable/ic_user_profile_background"
+                android:padding="15dp"
+                android:src="@drawable/ic_professional_icon" />
 
             <ImageView
                 android:id="@+id/imgIsProfessionalInfoUploaded"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_alignParentEnd="true"
                 android:layout_alignParentBottom="true"
+                android:layout_centerVertical="true"
                 android:src="@drawable/right_arrow" />
         </RelativeLayout>
 
@@ -87,74 +105,89 @@ android:layout_margin="@dimen/input_field_margin"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginLeft="@dimen/input_field_padding"
-        android:layout_marginTop="@dimen/input_field_padding"
         android:layout_marginRight="@dimen/input_field_padding"
-        android:orientation="horizontal">
+        android:orientation="vertical">
 
         <RelativeLayout
             android:id="@+id/layReferences"
-            android:layout_width="0dp"
-            android:layout_height="120dp"
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            android:layout_marginTop="5dp"
             android:layout_weight="0.5"
-
-            android:background="@drawable/border"
+            android:background="@drawable/border_white"
             android:elevation="5dp"
             android:padding="@dimen/input_field_padding">
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_margin="10dp"
+                android:layout_toRightOf="@+id/imgReferenceInfo"
+                android:layout_toLeftOf="@+id/imgIsReferenceInfoUploaded"
                 android:text="References"
                 android:textColor="@color/splash_color"
+                android:textSize="@dimen/title_text"
                 android:textStyle="bold" />
 
             <ImageView
                 android:id="@+id/imgReferenceInfo"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
-                android:src="@drawable/ic_references" />
+                android:layout_alignParentLeft="true"
+                android:layout_centerVertical="true"
+                android:background="@drawable/ic_user_profile_background"
+                android:padding="15dp"
+                android:src="@drawable/ic_references__icon" />
 
             <ImageView
                 android:id="@+id/imgIsReferenceInfoUploaded"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_alignParentEnd="true"
                 android:layout_alignParentBottom="true"
+                android:layout_centerVertical="true"
                 android:src="@drawable/right_arrow" />
         </RelativeLayout>
 
         <RelativeLayout
-            android:layout_width="0dp"
             android:id="@+id/layBankDetails"
-            android:layout_height="120dp"
-            android:layout_marginLeft="@dimen/text_margin_left"
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            android:layout_marginTop="5dp"
             android:layout_weight="0.5"
-
-            android:background="@drawable/border"
+            android:background="@drawable/border_white"
             android:elevation="5dp"
             android:padding="@dimen/input_field_padding">
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:layout_toRightOf="@+id/imgBankDetails"
+                android:layout_toLeftOf="@+id/imgIsBankDetailsUploaded"
                 android:text="Bank Details"
                 android:textColor="@color/splash_color"
+                android:textSize="@dimen/title_text"
                 android:textStyle="bold" />
 
             <ImageView
                 android:id="@+id/imgBankDetails"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
-                android:src="@drawable/ic_bank" />
+                android:layout_alignParentLeft="true"
+                android:layout_centerVertical="true"
+                android:background="@drawable/ic_user_profile_background"
+                android:padding="15dp"
+                android:src="@drawable/ic_bankdetails_icon" />
 
             <ImageView
                 android:id="@+id/imgIsBankDetailsUploaded"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_alignParentEnd="true"
                 android:layout_alignParentBottom="true"
+                android:layout_centerVertical="true"
                 android:src="@drawable/right_arrow" />
         </RelativeLayout>
 
@@ -162,51 +195,66 @@ android:layout_margin="@dimen/input_field_margin"
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-       android:layout_margin="@dimen/input_field_padding"
+        android:layout_height="80dp"
+        android:layout_marginLeft="15dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginRight="15dp"
+        android:layout_marginBottom="10dp"
+        android:padding="15dp"
+        android:elevation="5dp"
+        android:background="@drawable/border_white"
         android:orientation="horizontal">
 
         <RelativeLayout
             android:id="@+id/layDocuments"
-            android:layout_width="wrap_content"
-
-            android:layout_height="120dp"
-            android:background="@drawable/border"
-            android:elevation="5dp"
-            android:padding="@dimen/input_field_padding">
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
 
             <TextView
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginBottom="8dp"
+                android:layout_toLeftOf="@+id/imgIsDocumentInfoUploaded"
+                android:layout_toRightOf="@+id/imgDocumentInfo"
+                android:gravity="center_vertical"
                 android:text="Documents"
                 android:textColor="@color/splash_color"
+                android:textSize="@dimen/title_text"
                 android:textStyle="bold" />
 
             <ImageView
                 android:id="@+id/imgDocumentInfo"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
-                android:src="@drawable/ic_documents" />
+                android:layout_centerVertical="true"
+                android:background="@drawable/ic_user_profile_background"
+                android:padding="15dp"
+                android:src="@drawable/ic_documents_icon" />
 
             <ImageView
                 android:id="@+id/imgIsDocumentInfoUploaded"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_alignParentEnd="true"
                 android:layout_alignParentBottom="true"
+                android:layout_centerVertical="true"
                 android:src="@drawable/right_arrow" />
         </RelativeLayout>
 
 
     </LinearLayout>
-    <TextView android:id="@+id/loanStatus"
+
+    <TextView
+        android:id="@+id/loanStatus"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/border"
         android:layout_margin="@dimen/input_field_margin"
+        android:background="@drawable/border"
         android:elevation="5dp"
-        android:visibility="gone"
+        android:padding="@dimen/input_field_padding"
         android:textColor="@color/splash_color"
-        android:padding="@dimen/input_field_padding"/>
+        android:visibility="gone" />
 </LinearLayout>

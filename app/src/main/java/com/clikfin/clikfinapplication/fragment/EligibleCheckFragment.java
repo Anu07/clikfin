@@ -6,6 +6,8 @@ import android.os.Bundle;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,12 +21,13 @@ import com.clikfin.clikfinapplication.R;
 import com.clikfin.clikfinapplication.activity.DashboardActivity;
 
 public class EligibleCheckFragment extends Fragment {
-    private EditText edLoanAmount,edLoanmonth,tvroi;
-    private TextView emiTv;
+    private EditText edLoanAmount, edLoanmonth, tvroi;
+    private TextView emiTv, principalTv, interestTv, totalamtTv;
     private Button btnEMI;
-    private SeekBar seekBar,monthBar;
+    private SeekBar seekBar, monthBar;
     static FragmentActivity activity;
     Context context;
+
     public EligibleCheckFragment() {
         // Required empty public constructor
     }
@@ -37,6 +40,7 @@ public class EligibleCheckFragment extends Fragment {
             activity = (FragmentActivity) context;
         }
     }
+
     public static EligibleCheckFragment newInstance(String param1, String param2) {
         return new EligibleCheckFragment();
     }
@@ -51,18 +55,37 @@ public class EligibleCheckFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view= inflater.inflate(R.layout.fragment_eligible_check, container, false);
-        edLoanAmount=view.findViewById(R.id.edLoanAmount);
-        edLoanmonth=view.findViewById(R.id.edLoanmonth);
-        btnEMI=view.findViewById(R.id.btnEMI);
-        emiTv=view.findViewById(R.id.emiTv);
-        monthBar=view.findViewById(R.id.monthBar);
-        seekBar=view.findViewById(R.id.seekBar);
-        tvroi=view.findViewById(R.id.tvroi);
+        View view = inflater.inflate(R.layout.fragment_eligible_check, container, false);
+        edLoanAmount = view.findViewById(R.id.edLoanAmount);
+        edLoanmonth = view.findViewById(R.id.edLoanmonth);
+        btnEMI = view.findViewById(R.id.btnEMI);
+        emiTv = view.findViewById(R.id.emiTvVal);
+        principalTv = view.findViewById(R.id.principalAmt);
+        interestTv = view.findViewById(R.id.interestAmt);
+        totalamtTv = view.findViewById(R.id.totalamtTvVal);
+        monthBar = view.findViewById(R.id.monthBar);
+        seekBar = view.findViewById(R.id.seekBar);
+        tvroi = view.findViewById(R.id.tvroi);
+        edLoanAmount.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (!edLoanAmount.getText().toString().isEmpty())
+                    seekBar.setProgress(Integer.parseInt(edLoanAmount.getText().toString()));
+            }
+        });
+        edLoanmonth.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (!edLoanmonth.getText().toString().isEmpty())
+                    monthBar.setProgress(Integer.parseInt(edLoanmonth.getText().toString()));
+            }
+        });
+
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                edLoanAmount.setText(Integer.toString(progress));
+                if (edLoanAmount.getText().toString().isEmpty())
+                    edLoanAmount.setText(Integer.toString(progress));
             }
 
             @Override
@@ -79,7 +102,8 @@ public class EligibleCheckFragment extends Fragment {
         monthBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                edLoanmonth.setText(Integer.toString(progress));
+                if (edLoanmonth.getText().toString().isEmpty())
+                    edLoanmonth.setText(Integer.toString(progress));
             }
 
             @Override
@@ -96,13 +120,13 @@ public class EligibleCheckFragment extends Fragment {
             @Override
             public void onClick(View view) {
 
-                if(edLoanAmount.getText().length()==0){
+                if (edLoanAmount.getText().length() == 0) {
                     getToast("Please Enter Loan Amount");
-                }else if(edLoanmonth.getText().length()==0){
+                } else if (edLoanmonth.getText().length() == 0) {
                     getToast("Please Enter Month");
-                }else if(tvroi.getText().length()==0){
+                } else if (tvroi.getText().length() == 0) {
                     getToast("Please Enter Rate Of Interest");
-                }else{
+                } else {
                     findEMI();
                 }
 
@@ -112,7 +136,7 @@ public class EligibleCheckFragment extends Fragment {
         return view;
     }
 
-    private void findEMI(){
+    private void findEMI() {
    /*     double loanAmount = Integer.parseInt(tvLoanAmount.getText().toString());
         double interestRate = (Integer.parseInt(tvroi.getText().toString()));
         double loanPeriod = Integer.parseInt(edLoanmonth.getText().toString());
@@ -140,33 +164,42 @@ public class EligibleCheckFragment extends Fragment {
         double interestRate = Double.parseDouble(tvroi.getText().toString());
         double loanPeriod = Double.parseDouble(edLoanmonth.getText().toString());
 
-        double monthlyinterestratio=(interestRate/100)/12;
-        double monthlyinterest=monthlyinterestratio*loanAmount;
-        double top=Math.pow((1+monthlyinterestratio),loanPeriod);
-        double bottom=top -1;
-        double sp=top/bottom;
-        double emi=((loanAmount * monthlyinterestratio) *sp);
+        double monthlyinterestratio = (interestRate / 100) / 12;
+        double monthlyinterest = monthlyinterestratio * loanAmount;
+        double top = Math.pow((1 + monthlyinterestratio), loanPeriod);
+        double bottom = top - 1;
+        double sp = top / bottom;
+        double emi = ((loanAmount * monthlyinterestratio) * sp);
         //double result=emi
-
+        principalTv.setText("" + String.format("%.2f", loanAmount));
+        totalamtTv.setText("" + (String.format("%.2f", loanAmount + calTotalInt(emi,loanPeriod,loanAmount))));
         emiTv.setText(String.format("%.2f", emi));
+        interestTv.setText("" + String.format("%.2f", calTotalInt(emi,loanPeriod,loanAmount)));
+    }
 
+
+    public float calTotalInt(double emi, double Months, double Principal) {
+        return (float)(((float)(emi * Months)) - Principal);
     }
 
     public float calDvdnt(float Rate, float Months) {
-        return (float)(Math.pow(1 + Rate, Months));
-    }
-    public float calFinalDvdnt(float Principal, float Rate, float Dvdnt) {
-        return (float)(Principal * Rate * Dvdnt);
-    }
-    public float calDivider(float Dvdnt) {
-        return (float)(Dvdnt - 1);
-    }
-    public float calEmi(float FD, Float D) {
-        return (float)(FD / D);
+        return (float) (Math.pow(1 + Rate, Months));
     }
 
-    private void getToast(String msg){
-        Toast.makeText(getContext(),msg,Toast.LENGTH_LONG).show();
+    public float calFinalDvdnt(float Principal, float Rate, float Dvdnt) {
+        return (float) (Principal * Rate * Dvdnt);
+    }
+
+    public float calDivider(float Dvdnt) {
+        return (float) (Dvdnt - 1);
+    }
+
+    public float calEmi(float FD, Float D) {
+        return (float) (FD / D);
+    }
+
+    private void getToast(String msg) {
+        Toast.makeText(getContext(), msg, Toast.LENGTH_LONG).show();
     }
 
 }

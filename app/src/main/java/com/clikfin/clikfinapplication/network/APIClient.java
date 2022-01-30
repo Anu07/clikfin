@@ -19,8 +19,8 @@ public class APIClient {
     public static final String BASE_URL = "http://app.clikfin.com";
     public static final String BASE_LOANTAP_URL = " https://api.loantap.in/v1-application/"; //testing
     public static final String LOANTAP_APIKEY = "H3kYj9iKiAxOHI2Eu4hYJDlqcyFL09iC"; //PROD KEY
-    public static final String LOANTAP_DEVKEY = "hkokBhIaqMsUXhpeXrkf7ZKlRUhNr7dz";
-    public static final String BASE_DEV_LOANTAP_URL = "https://api.thearks.in/v1-application/"; //testing
+//    public static final String LOANTAP_DEVKEY = "hkokBhIaqMsUXhpeXrkf7ZKlRUhNr7dz";
+//    public static final String BASE_DEV_LOANTAP_URL = "https://api.thearks.in/v1-application/"; //testing
 
     public static final String LOANTAPPRODUCTID = "lt-personal-term-loan-reducing";
     public static final String LOANTAPPARTNERID="clikfin";

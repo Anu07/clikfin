@@ -19,8 +19,8 @@ android {
         applicationId "com.clikfin.clikfinapplication"
         minSdkVersion 21
         targetSdkVersion 30
-        versionCode 29
-        versionName "2.6"
+        versionCode 31
+        versionName "2.8"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     compileOptions {

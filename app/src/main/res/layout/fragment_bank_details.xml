@@ -88,8 +88,31 @@
                 android:id="@+id/reEnterAccountNumber_error"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/input_field_margin"
+                android:visibility="gone"
                 android:textSize="@dimen/text_size" />
+
+            <TextView
+                android:id="@+id/bankBranchName_error"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/text_size" />
+
+            <EditText
+                android:id="@+id/edBranchName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/border"
+                android:elevation="@dimen/elevation"
+                android:hint="@string/ed_account_branch"
+                android:imeOptions="actionNext"
+                android:maxLines="1"
+                android:inputType="text"
+                android:maxLength="30"
+                android:padding="@dimen/input_field_padding"
+                android:textSize="@dimen/small_text" />
+
+
+
 
             <EditText
                 android:id="@+id/edIFSCCOde"
@@ -97,6 +120,7 @@
                 android:layout_height="wrap_content"
                 android:background="@drawable/border"
                 android:elevation="@dimen/elevation"
+                android:layout_marginTop="10dp"
                 android:hint="@string/ed_IFSC"
                 android:imeOptions="actionDone"
                 android:inputType="text"
