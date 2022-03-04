@@ -986,7 +986,7 @@ public class BasicDetailsFragment extends Fragment {
         personalDetails.setCurrentAddressLine1(edLine1.getText().toString());
         personalDetails.setCurrentAddressLine2(edLine2.getText().toString());
         personalDetails.setCurrentAddressLandmark(edLandMark.getText().toString());
-        personalDetails.setCurrentAddressCity(edCity.getText().toString());
+        personalDetails.setCurrentAddressCity(edCity.getText().toString().trim());
         personalDetails.setCurrentAddressState(spinnerStateList.getSelectedItem().toString());
         personalDetails.setCurrentAddressPinCode(edPinCode.getText().toString());
         personalDetails.setAddressProof(spinnerAddressProof.getSelectedItem().toString());
@@ -994,7 +994,7 @@ public class BasicDetailsFragment extends Fragment {
         personalDetails.setPermanentAddressLine1(edPermanentAddressLine1.getText().toString());
         personalDetails.setPermanentAddressLine2(edPermanentAddressLine2.getText().toString());
         personalDetails.setPermanentAddressLandmark(edPermanentAddressLandMark.getText().toString());
-        personalDetails.setPermanentAddressCity(edPermanentAddressCity.getText().toString());
+        personalDetails.setPermanentAddressCity(edPermanentAddressCity.getText().toString().trim());
         personalDetails.setPermanentAddressState(spinnerPermanentAddressState.getSelectedItem().toString());
         personalDetails.setPermanentAddressPinCode(edPermanentPinCode.getText().toString());
         String noOfYearsStayingFor = noOfYearsStayingYears.getText().toString() + "year";

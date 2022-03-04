@@ -992,7 +992,7 @@ public class EmploymentFragment extends Fragment {
                 return (int) mapElement.getValue();
             }
         }
-        return 0;
+        return 5;
     }
 
     private int getOverallExperienceId(String overallExperience) {

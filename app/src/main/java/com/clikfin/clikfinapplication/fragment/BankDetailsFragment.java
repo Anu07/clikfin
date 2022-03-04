@@ -288,7 +288,7 @@ public class BankDetailsFragment extends Fragment {
         SharedPreferences sharedPreferences = context.getSharedPreferences(getString(R.string.shared_preferences), Context.MODE_PRIVATE);
         String authToken = sharedPreferences.getString(getString(R.string.user_auth_token), "");
         String loanApplicationId = sharedPreferences.getString(getString(R.string.loan_application_id), "");
-        if (loanApplicationId != null) {
+        if (!loanApplicationId.isEmpty()) {
             String url = APIClient.BASE_URL + "/application/" + loanApplicationId + "/bankDetails";
             Call<BankDetailsResponse> call = APIClient.getClient(APIClient.type.JSON).postBankDetails(url, authToken, bankDetails);
             call.enqueue(new APICallbackInterface<BankDetailsResponse>(context) {
@@ -543,6 +543,11 @@ public class BankDetailsFragment extends Fragment {
                             Toast.makeText(getActivity(), "Auth Token Expired", Toast.LENGTH_LONG).show();
                         }
                     } else {
+                        try {
+                            Toast.makeText(getActivity(),response.body().getAddApplication1().getError().getMessage(),Toast.LENGTH_LONG).show();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                         Log.e("BankDetailsFragment", "Error received" + response.code());
                     }
                 }
@@ -576,7 +581,7 @@ public class BankDetailsFragment extends Fragment {
                 Log.d(TAG, "Response " + response.isSuccessful());
                 closeProgress();
                 if (response.code() == 200) {
-                    sharedPreferences.edit().putString(getString(R.string.upwardResponse), new Gson().toJson((UpwardLoanResponse) response.body())).apply();
+                    sharedPreferences.edit().putString(context.getString(R.string.upwardResponse), new Gson().toJson((UpwardLoanResponse) response.body())).apply();
 //todo                    replaceFragment(new DocumentUploadFragment());
                 } else {
                     Log.e("BankDetailsFragment", "Error received" + response.code());

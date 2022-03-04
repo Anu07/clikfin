@@ -43,13 +43,11 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
-import com.clikfin.clikfinapplication.BuildConfig;
 import com.clikfin.clikfinapplication.R;
 import com.clikfin.clikfinapplication.activity.DashboardActivity;
 import com.clikfin.clikfinapplication.constants.Constants;
@@ -111,10 +109,10 @@ import retrofit2.Response;
 
 public class DocumentUploadFragment extends Fragment {
     private static final String TAG = "LoanTapDocUploadFrag";
-    private static int size=0;
+    private static int size = 0;
     LinearLayout layBankStatements;
     Button btnUploadDocDone;
-    String proofJson="[{\n" +
+    String proofJson = "[{\n" +
             "\t\t\"label\": \"Address Proof\",\n" +
             "\t\t\"value\": \"address_proof\"\n" +
             "\t},\n" +
@@ -587,16 +585,19 @@ public class DocumentUploadFragment extends Fragment {
         tvIs3MonthPaySlipMandatory = view.findViewById(R.id.tvIs3MonthPaySlipMandatory);
         tvIsPhotoUploadMandatory = view.findViewById(R.id.tvIsPhotoUploadMandatory);
         tvIsCompanyIDUploadMandatory = view.findViewById(R.id.tvIsCompanyIDUploadMandatory);
-        sharedPreferences = getContext().getSharedPreferences(getString(R.string.shared_preferences), Context.MODE_PRIVATE);
+        sharedPreferences = requireContext().getSharedPreferences(getString(R.string.shared_preferences), Context.MODE_PRIVATE);
         editor = Common.getSharedPreferencesEditor(activity);
         if (sharedPreferences.getString(getString(R.string.loan_source), "").equals(getString(R.string.upward))) {
-            String upwardResponseStr = sharedPreferences.getString(getString(R.string.upwardResponse), "");
-            upwardResponse = new Gson().fromJson(upwardResponseStr, UpwardLoanResponse.class);
-            if ((upwardResponse != null && upwardResponse.getData().getErrorMessage().isEmpty()))
-                getDocumentUploadedReport();
+            if (sharedPreferences.getString(getString(R.string.upwardResponse), "") != null) {
+                String upwardResponseStr = sharedPreferences.getString(getString(R.string.upwardResponse), "");
+                upwardResponse = new Gson().fromJson(upwardResponseStr, UpwardLoanResponse.class);
+                if ((upwardResponse != null && upwardResponse.getData().getErrorMessage().isEmpty()))
+                    getDocumentUploadedReport();
+            }
+
             try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    if(sharedPreferences.getString("LOANTAPAPPID", "")!=null){
+                    if (sharedPreferences.getString("LOANTAPAPPID", "") != null) {
                         getLoanTapDocumentUploadedReport();
                     }
                 }
@@ -767,12 +768,12 @@ public class DocumentUploadFragment extends Fragment {
     private void getLoanTapDocumentUploadedReport() {
         String url = APIClient.BASE_LOANTAP_URL + "enquire";
         Call<EnquireResponse> call = APIClient.getClient(APIClient.type.JSON)
-                .enquireLoanTapDocuments(url, BaaSEncryptDecrypt.encrypt(String.valueOf(System.currentTimeMillis()/1000L)), LOANTAPPRODUCTID, LOANTAPPARTNERID, createEnquireRequest());
+                .enquireLoanTapDocuments(url, BaaSEncryptDecrypt.encrypt(String.valueOf(System.currentTimeMillis() / 1000L)), LOANTAPPRODUCTID, LOANTAPPARTNERID, createEnquireRequest());
         call.enqueue(new Callback<EnquireResponse>() {
             @Override
             public void onResponse(Call<EnquireResponse> call, Response<EnquireResponse> response) {
                 EnquireResponse enquireResponse = response.body();
-                if(enquireResponse.getDocumentsStatus()!=null && enquireResponse.getDocumentsStatus().getAnswer()!=null){
+                if (enquireResponse.getDocumentsStatus() != null && enquireResponse.getDocumentsStatus().getAnswer() != null) {
                     Documents docsKycResponse = enquireResponse.getDocumentsStatus().getAnswer().getDocuments();
                     if (docsKycResponse.getKyc().getIsCompleted().equals("no")) {
                         if (docsKycResponse.getKyc().getAddressProof().getIsUploaded().equals("no")) {
@@ -782,11 +783,11 @@ public class DocumentUploadFragment extends Fragment {
                         } else if (docsKycResponse.getSalarySlip().getIsCompleted().equals("no")) {
                             loanTapDocs.put(docsKycResponse.getSalarySlip().getSalarySlipAll092021().getFileName(), false);
                         } else if (docsKycResponse.getBankStatement().getIsCompleted().equals("no")) {
-                            if(docsKycResponse.getBankStatement().getIndividualFiles().getBankStatement072021().getIsUploaded().equals("no")){
+                            if (docsKycResponse.getBankStatement().getIndividualFiles().getBankStatement072021().getIsUploaded().equals("no")) {
                                 loanTapDocs.put(docsKycResponse.getBankStatement().getIndividualFiles().getBankStatement072021().getFileName(), false);
-                            }else if(docsKycResponse.getBankStatement().getIndividualFiles().getBankStatement082021().getIsUploaded().equals("no")){
+                            } else if (docsKycResponse.getBankStatement().getIndividualFiles().getBankStatement082021().getIsUploaded().equals("no")) {
                                 loanTapDocs.put(docsKycResponse.getBankStatement().getIndividualFiles().getBankStatement082021().getFileName(), false);
-                            }else if(docsKycResponse.getBankStatement().getIndividualFiles().getBankStatement092021().getIsUploaded().equals("no")){
+                            } else if (docsKycResponse.getBankStatement().getIndividualFiles().getBankStatement092021().getIsUploaded().equals("no")) {
                                 loanTapDocs.put(docsKycResponse.getBankStatement().getIndividualFiles().getBankStatement092021().getFileName(), false);
                             }
                         } else {
@@ -798,7 +799,7 @@ public class DocumentUploadFragment extends Fragment {
 
             @Override
             public void onFailure(Call<EnquireResponse> call, Throwable t) {
-                Log.e(TAG, "onFailure: "+t.getMessage() );
+                Log.e(TAG, "onFailure: " + t.getMessage());
             }
         });
     }
@@ -917,8 +918,8 @@ public class DocumentUploadFragment extends Fragment {
                         //permission is denied (and never ask again is  checked)
                         //shouldShowRequestPermissionRationale will return false
                         else {
-                            Toast.makeText(context, "Go to settings and enable permissions", Toast.LENGTH_SHORT)
-                                    .show();
+//                            Toast.makeText(context, "Go to settings and enable permissions", Toast.LENGTH_SHORT)
+//                                    .show();
                             //                            //proceed with logic by disabling the related features or quit the app.
                         }
                     }
@@ -946,7 +947,7 @@ public class DocumentUploadFragment extends Fragment {
             return null;
 
         // Create file path inside app's data dir
-        String filePath = context.getApplicationInfo().dataDir + File.separator + "temp_file"+getType(fileType);
+        String filePath = context.getApplicationInfo().dataDir + File.separator + "temp_file" + getType(fileType);
         file = new File(filePath);
         try {
             InputStream inputStream = contentResolver.openInputStream(uri);
@@ -964,7 +965,7 @@ public class DocumentUploadFragment extends Fragment {
         }
 
         size = Integer.parseInt(String.valueOf(file.length() / 1024));
-        Log.e("SIZE",""+size);
+        Log.e("SIZE", "" + size);
         return file.getAbsolutePath();
     }
 
@@ -1001,7 +1002,7 @@ public class DocumentUploadFragment extends Fragment {
 
 
     private void setIsDocumentUploadedImg() {
-        SharedPreferences sharedPreferences = context.getSharedPreferences(getString(R.string.shared_preferences), Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = requireContext().getSharedPreferences(getString(R.string.shared_preferences), Context.MODE_PRIVATE);
         if (sharedPreferences.getBoolean(getString(R.string.isUpload_upload_pan_card), false)) {
             imgPanUpload.setImageResource(R.drawable.ic_ok);
         }
@@ -1143,7 +1144,7 @@ public class DocumentUploadFragment extends Fragment {
                 if (response.code() == 200 && response.body().getData().getErrorMessage().isEmpty()) {
                     uploadDocument(response.body());
                 } else {
-                        Log.e(TAG,"url generation failed upwards");
+                    Log.e(TAG, "url generation failed upwards");
                 }
             }
 
@@ -1221,7 +1222,8 @@ public class DocumentUploadFragment extends Fragment {
             }
         });
     }
-//4a469082-8af7-41f7-940e-97453defa969
+
+    //4a469082-8af7-41f7-940e-97453defa969
     private void callClikFinDocCall() {
         String loanApplicationId = sharedPreferences.getString(getString(R.string.loan_application_id), "");
         String url = APIClient.BASE_URL + "/application/" + loanApplicationId + "/upload/" + uploadDocType;
@@ -1603,14 +1605,23 @@ public class DocumentUploadFragment extends Fragment {
             }
         });
         btnSelectFileTOUpload.setOnClickListener(v -> {
-            picIntent.putExtra("return_data", true);
-            startActivityForResult(picIntent, Constants.SELECT_DOC_FILE_CODE);
+            if (checkAndRequestPermissions()){
+                picIntent.putExtra("return_data", true);
+                startActivityForResult(picIntent, Constants.SELECT_DOC_FILE_CODE);
+            }else{
+                Toast.makeText(getActivity(),"Please grant camera and gallery permission from settings to proceed.",Toast.LENGTH_LONG).show();
+            }
+
         });
         imgCamera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 //                    captureImage();
-                dispatchTakePictureIntent();
+                if (checkAndRequestPermissions()){
+                    dispatchTakePictureIntent();
+                }else{
+                    Toast.makeText(getActivity(),"Please grant camera and gallery permission from settings to proceed.",Toast.LENGTH_LONG).show();
+                }
             }
         });
         btnCancelFileToUpload.setOnClickListener(new View.OnClickListener() {
@@ -1623,18 +1634,17 @@ public class DocumentUploadFragment extends Fragment {
 
             if (file != null) {
                 if (Common.isNetworkConnected(context)) {
-                    if (sharedPreferences.getString(getString(R.string.loan_source), "").equals(getString(R.string.upward))
-                            && (upwardResponse != null && upwardResponse.getData().getErrorMessage().isEmpty())) {
+                    if (sharedPreferences.getString(getString(R.string.loan_source), "").equals(getString(R.string.upward))) {
                         uploadDocumentUrl(getType(filePath));
 //                    } else if (sharedPreferences.getString(getString(R.string.loan_source), "").equals(getString(R.string.loantap))) {
                         try {
-                            Log.e(TAG,"Document Type--- "+uploadDocType);
-                          uploadDocumentLoanTap(generateLoanTapUploadDocumentRequest(uploadDocType));
+                            Log.e(TAG, "Document Type--- " + uploadDocType);
+                            uploadDocumentLoanTap(generateLoanTapUploadDocumentRequest(uploadDocType));
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
                     }
-                        callClikFinDocCall();
+                    callClikFinDocCall();
                 } else {
                     Common.networkDisconnectionDialog(context);
                 }
@@ -1650,8 +1660,8 @@ public class DocumentUploadFragment extends Fragment {
     /**
      * LoanTap upload Document Requets
      *
-     * @return
      * @param uploadDocType
+     * @return
      */
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -1672,19 +1682,20 @@ public class DocumentUploadFragment extends Fragment {
 
     /**
      * loantap document type
+     *
      * @param uploadDocType
      * @return
      */
     private String getLoanTapDocType(String uploadDocType) {
         ProofJsonItem[] proofData = new Gson().fromJson(proofJson, ProofJsonItem[].class);
-        if(uploadDocType.contains("PAY_SLIP")){
-            uploadDocType = uploadDocType.replace("PAY_SLIP","SALARY_SLIP");
+        if (uploadDocType.contains("PAY_SLIP")) {
+            uploadDocType = uploadDocType.replace("PAY_SLIP", "SALARY_SLIP");
         }
-        String[] uploadDocTypees = uploadDocType.replace("_"," ").split(" ");
-        String combinedUploadString = uploadDocTypees.length>1?( uploadDocTypees[0]+" "+uploadDocTypees[1]).toLowerCase():uploadDocType;
+        String[] uploadDocTypees = uploadDocType.replace("_", " ").split(" ");
+        String combinedUploadString = uploadDocTypees.length > 1 ? (uploadDocTypees[0] + " " + uploadDocTypees[1]).toLowerCase() : uploadDocType;
         for (int i = 0; i < proofData.length; i++) {
-            if(Pattern.compile(Pattern.quote(proofData[i].getLabel()), Pattern.CASE_INSENSITIVE).matcher(uploadDocType).find() || (proofData[i].getLabel().toLowerCase(Locale.ROOT).contains(combinedUploadString))){
-                Log.e(TAG, "getLoanTapDocType: "+proofData[i].getValue());
+            if (Pattern.compile(Pattern.quote(proofData[i].getLabel()), Pattern.CASE_INSENSITIVE).matcher(uploadDocType).find() || (proofData[i].getLabel().toLowerCase(Locale.ROOT).contains(combinedUploadString))) {
+                Log.e(TAG, "getLoanTapDocType: " + proofData[i].getValue());
                 return proofData[i].getValue();
             }
         }
@@ -1698,7 +1709,7 @@ public class DocumentUploadFragment extends Fragment {
         Call<UploadDocResponse> call = null;
         try {
             call = APIClient.getClient(APIClient.type.JSON)
-                    .uploadLoanTapDocument(url,BaaSEncryptDecrypt.encrypt(String.valueOf(System.currentTimeMillis()/1000L)), LOANTAPPRODUCTID, LOANTAPPARTNERID, uploadRequest);
+                    .uploadLoanTapDocument(url, BaaSEncryptDecrypt.encrypt(String.valueOf(System.currentTimeMillis() / 1000L)), LOANTAPPRODUCTID, LOANTAPPARTNERID, uploadRequest);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -1707,8 +1718,8 @@ public class DocumentUploadFragment extends Fragment {
             public void onResponse(Call<UploadDocResponse> call, Response<UploadDocResponse> response) {
                 Log.d("Loan Tap", "Response " + response.isSuccessful());
 //                closeProgress();
-                if (response.body().getUploadDocument1().getAnswer()!=null) {
-                        Toast.makeText(getActivity(),"Document uploaded successfully", Toast.LENGTH_SHORT).show();
+                if (response.body().getUploadDocument1().getAnswer() != null) {
+                    Toast.makeText(getActivity(), "Document uploaded successfully", Toast.LENGTH_SHORT).show();
                     closeProgress();
                     dialog.dismiss();
                 } else {
@@ -1736,8 +1747,8 @@ public class DocumentUploadFragment extends Fragment {
                 try {
                     fileUri = data.getData();
                     fileType = context.getContentResolver().getType(fileUri);
-                    filePath = createCopyAndReturnRealPath(context,fileUri);
-                    Log.e("PATH",""+filePath);
+                    filePath = createCopyAndReturnRealPath(context, fileUri);
+                    Log.e("PATH", "" + filePath);
                     if (size > 5000) {
                         tvUploadDocMsg.setText(getString(R.string.file_size_error));
                     } else if (!(fileType.contains("pdf") || fileType.contains("png") || fileType.contains("jpg") || fileType.contains("jpeg"))) {
@@ -1962,7 +1973,7 @@ public class DocumentUploadFragment extends Fragment {
 
     public void closeProgress() {
         try {
-            if ( pDialog != null) {
+            if (pDialog != null) {
                 pDialog.dismiss();
             }
         } catch (Exception e) {
